@@ -1,0 +1,51 @@
+const functions = require('../../services/functions')
+
+
+// ds email trang chủ
+exports.getAll = async(req, res, next) => {
+    try {
+
+    } catch (err) {
+        return functions.setError(res, err.message);
+    };
+};
+
+
+// ds email theo mẫu
+exports.findBySample = async(req, res, next) => {
+    try {
+
+    } catch (err) {
+        return functions.setError(res, err.message);
+    };
+};
+
+
+// ds email theo danh mục
+exports.findBy = async(req, res, next) => {
+    try {
+
+    } catch (err) {
+        return functions.setError(res, err.message);
+    };
+};
+
+
+// xem trước email
+exports.preview = async(req, res, next) => {
+    try {
+
+    } catch (err) {
+        return functions.setError(res, err.message);
+    };
+};
+
+
+// chi tiết email
+exports.viewDetail = async(req, res, next) => {
+    try {
+
+    } catch (err) {
+        return functions.setError(res, err.message);
+    };
+};
