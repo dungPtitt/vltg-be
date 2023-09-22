@@ -42,7 +42,7 @@ exports.sendEmailUv = async (ntd, ungVien) => {
                     <td colspan="2">
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;">Xin chào ${ntd.userName}</p>
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Cám ơn bạn đã tin tưởng Vieclamtheogio.timviec365.vn là cầu nối giúp bạn tìm kiếm công việc mong muốn.</p>
-                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;"><span><a style="    font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/ung-vien-${ntd.idVLTG}.html">Hồ sơ của bạn</a> trên website Vieclamtheogio.timviec365.vn đã được nhà tuyển dụng <span><a style="font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/'.'-co' . ${ntd.idVLTG} .'.html">${ntd.userName}</a> xem</span>. Bạn có thể tham khảo các công việc tương tự xem có phù hợp với mình không nhé!</p> 
+                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;"><span><a style="    font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/ung-vien-${ntd.idTimViec365}.html">Hồ sơ của bạn</a> trên website Vieclamtheogio.timviec365.vn đã được nhà tuyển dụng <span><a style="font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/'.'-co' . ${ntd.idTimViec365} .'.html">${ntd.userName}</a> xem</span>. Bạn có thể tham khảo các công việc tương tự xem có phù hợp với mình không nhé!</p> 
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Trân trọng!</p>
                     </td>
                 </tr> 
@@ -103,7 +103,7 @@ exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
                 <p style="margin: 5px 0px 10px 0px; font-size: 18px;padding-left: 70px;"><span>Địa chỉ:  </span><span>${ungVien.address}</span></p>
 
             <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Để xem thông tin chi tiết ứng viên và tải CV ứng viên vui lòng nhấn nút:</p>
-            <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.timviec365.vn/ung-vien-${ungVien.idVLTG}.html" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
+            <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.timviec365.vn/ung-vien-${ungVien.idTimViec365}.html" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
         </td>
         </tr>`;
     let subject = uv_name + " - Timviec365.vn đã ứng tuyển vào vị trí " + vi_tri;
@@ -123,8 +123,8 @@ exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
 };
 
 exports.checkCompany = async (req, res, next) => {
-    let id_ntd = req.user.data.idVLTG;
-    let ntd = await Users.findOne({idVLTG: id_ntd, type: 1});
+    let id_ntd = req.user.data.idTimViec365;
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
     if(ntd) {
         return next();
     }
@@ -132,8 +132,8 @@ exports.checkCompany = async (req, res, next) => {
 }
 
 exports.checkCandidate = async (req, res, next) => {
-    let id_uv = req.user.data.idVLTG;
-    let uv = await Users.findOne({idVLTG: id_uv, type: {$in: [0, 2]}});
+    let id_uv = req.user.data.idTimViec365;
+    let uv = await Users.findOne({idTimViec365: id_uv, type: {$in: [0, 2]}});
     if(uv) {
         return next();
     }

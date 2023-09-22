@@ -60,7 +60,7 @@ exports.listCityAndDistrict = async(req, res, next) => {
 //-----------------cong viec mong muon
 exports.getCongViecMongMuon = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let uvCvmm = await UvCvmm.findOne({id_uv_cvmm: userId}).lean();
     if(uvCvmm) {
       let job = await JobCategory.find({}, {jc_id: 1, jc_name: 1});
@@ -100,11 +100,11 @@ exports.getCongViecMongMuon = async(req, res, next) => {
 
 exports.updateCongViecMongMuon = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let {cong_viec, nganh_nghe, dia_diem, cap_bac, hinh_thuc, luong} = req.body;
     if(cong_viec && nganh_nghe && dia_diem && cap_bac && hinh_thuc && luong && dia_diem.length>0 && nganh_nghe.length>0) {
       let time = functions.convertTimestamp(Date.now());
-      let user = await Users.findOneAndUpdate({idVLTG: userId, type: 0}, {updatedAt: time}, {new: true});
+      let user = await Users.findOneAndUpdate({idTimViec365: userId, type: 0}, {updatedAt: time}, {new: true});
       if(user) {
         nganh_nghe = nganh_nghe.join(", ");
         dia_diem = dia_diem.join(", ");
@@ -131,10 +131,10 @@ exports.updateCongViecMongMuon = async(req, res, next) => {
 
 exports.updateKyNangBanThan = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let ky_nang = req.body.ky_nang;
     let time = functions.convertTimestamp(Date.now());
-    let user = await Users.findOneAndUpdate({idVLTG: userId, type: 0}, {updatedAt: time}, {new: true});
+    let user = await Users.findOneAndUpdate({idTimViec365: userId, type: 0}, {updatedAt: time}, {new: true});
     if(user) {
       let uvCvmm = await UvCvmm.findOneAndUpdate({id_uv_cvmm: userId}, {
         ky_nang: ky_nang,
@@ -153,7 +153,7 @@ exports.updateKyNangBanThan = async(req, res, next) => {
 //-------------kinh nghiem lam viec
 exports.getKinhNghiemLamViec = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let uvKnlv = await UvKnlv.find({id_uv_knlv: userId}).sort({id_knlv: 1});
     return functions.success(res, "get info kinh nghiem lam viec thanh cong", {data: uvKnlv});
   }catch(error) {
@@ -163,7 +163,7 @@ exports.getKinhNghiemLamViec = async(req, res, next) => {
 
 exports.createKinhNghiemLamViec = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let {chucdanh, time_fist, time_end, cty, mota} = req.body;
     let now = Date.now();
     if(chucdanh && time_fist && time_end && cty && mota) {
@@ -199,7 +199,7 @@ exports.createKinhNghiemLamViec = async(req, res, next) => {
 
 exports.updateKinhNghiemLamViec = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let {id_knlv, chucdanh, time_fist, time_end, cty, mota} = req.body;
     let now = Date.now();
     let time = functions.convertTimestamp(now);
@@ -208,7 +208,7 @@ exports.updateKinhNghiemLamViec = async(req, res, next) => {
         time_fist = new Date(time_fist);
         time_end = new Date(time_end);
         if(time_fist<now && time_end<now && time_end>time_fist) {
-          let user = await Users.findOneAndUpdate({idVLTG: userId, type: 0}, {updatedAt: time}, {new: true});
+          let user = await Users.findOneAndUpdate({idTimViec365: userId, type: 0}, {updatedAt: time}, {new: true});
           if(!user) return functions.setError(res, "user not found!", 404);
           let knlv = await UvKnlv.findOneAndUpdate({id_knlv: Number(id_knlv), id_uv_knlv: userId}, {
             chuc_danh: chucdanh,
@@ -234,7 +234,7 @@ exports.updateKinhNghiemLamViec = async(req, res, next) => {
 
 exports.deleteKinhNghiemLamViec = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let id_knlv = req.body.id_knlv;
     if(id_knlv) {
       let uvKnlv = await UvKnlv.findOneAndDelete({id_knlv: Number(id_knlv), id_uv_knlv: userId});
@@ -252,8 +252,8 @@ exports.deleteKinhNghiemLamViec = async(req, res, next) => {
 //---------------Buoi co the di lam
 exports.getBuoiCoTheDiLam = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
-    let user_uv = await Users.findOne({idVLTG: userId}, {
+    let userId = req.user.data.idTimViec365;
+    let user_uv = await Users.findOne({idTimViec365: userId}, {
       "userName": "$userName",
       "phone": "$phone",
       "phoneTK": "$phoneTK",
@@ -278,12 +278,12 @@ exports.getBuoiCoTheDiLam = async(req, res, next) => {
 
 exports.updateBuoiCoTheDiLam = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let day = req.body.day;
     if(day && day.length>0) {
       day = day.join(", ");
       let time = functions.convertTimestamp(Date.now());
-      let user_uv = await Users.findOneAndUpdate({idVLTG: userId}, {
+      let user_uv = await Users.findOneAndUpdate({idTimViec365: userId}, {
         updatedAt: time,
         "inforVLTG.uv_day": day
       }, {new: true});
@@ -301,7 +301,7 @@ exports.updateBuoiCoTheDiLam = async(req, res, next) => {
 //----viec lam da ung tuyen
 exports.getViecLamDaUngTuyen = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let {page, pageSize} = req.body;
     if(!page) page = 1;
     if(!pageSize) pageSize = 6;
@@ -354,7 +354,7 @@ exports.getViecLamDaUngTuyen = async(req, res, next) => {
 
 exports.deleteViecLamDaUngTuyen = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let id_viec = req.body.id_viec;
     if(id_viec) {
       let ungTuyen = await UngTuyen.findOneAndDelete({id_uv: userId, id_viec: Number(id_viec)});
@@ -372,7 +372,7 @@ exports.deleteViecLamDaUngTuyen = async(req, res, next) => {
 //-------------Viec lam da luu
 exports.getViecLamDaLuu = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let {page, pageSize} = req.body;
     if(!page) page = 1;
     if(!pageSize) pageSize = 6;
@@ -420,7 +420,7 @@ exports.getViecLamDaLuu = async(req, res, next) => {
 
 exports.deleteViecLamDaLuu = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let id_viec = req.body.id_viec;
     if(id_viec) {
       let viecLamDaLuu = await UvSaveVl.findOneAndDelete({id_uv: userId, id_viec: Number(id_viec)});
@@ -438,14 +438,14 @@ exports.deleteViecLamDaLuu = async(req, res, next) => {
 //--------------cac chuc nang lien quan
 exports.nhanViec = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let {id_viec, ca_lam, gio_lam, day} = req.body;
     if(id_viec && ca_lam && gio_lam && day && day.length>0) {
       id_viec = Number(id_viec);
       let viecLam = await ViecLam.findOne({id_vieclam: id_viec});
       if(viecLam) {
-        let ntd = await Users.findOne({idVLTG: viecLam.id_ntd, type: 1});
-        let ungVien = await Users.findOne({idVLTG: userId, type: 0});
+        let ntd = await Users.findOne({idTimViec365: viecLam.id_ntd, type: 1});
+        let ungVien = await Users.findOne({idTimViec365: userId, type: 0});
         if(ntd && ungVien) {
           let check = await UngTuyen.findOne({id_uv: userId, id_viec: id_viec});
           if(check) return functions.setError(res, "Ung vien da ung tuyen viec lam!", 400);
@@ -472,7 +472,7 @@ exports.nhanViec = async(req, res, next) => {
             let thongBaoNtd = new ThongBaoNtd({
               tb_id: maxIdTb,
               td_uv: userId,
-              td_ntd: ntd.idVLTG,
+              td_ntd: ntd.idTimViec365,
               tb_name: uv_name,
               tb_avatar: uv_avatar
             });
@@ -495,13 +495,13 @@ exports.nhanViec = async(req, res, next) => {
 
 exports.luuViecLam = async(req, res, next) => {
   try{
-    let userId = req.user.data.idVLTG;
+    let userId = req.user.data.idTimViec365;
     let id_viec = req.body.id_viec;
     if(id_viec) {
       id_viec = Number(id_viec);
       let viecLam = await ViecLam.findOne({id_vieclam: id_viec});
       if(viecLam) {
-        let ntd = await Users.findOne({idVLTG: viecLam.id_ntd}, {userName: 1});
+        let ntd = await Users.findOne({idTimViec365: viecLam.id_ntd}, {userName: 1});
         if(ntd) {
           let check = await UvSaveVl.findOne({id_uv: userId, id_viec: id_viec});
           if(check) {
@@ -537,7 +537,7 @@ exports.lamMoiUngVien = async(req, res, next) => {
     let id_uv = req.body.id_uv;
     if(id_uv) {
       let time = functions.convertTimestamp(Date.now());
-      let ungVien = await Users.findOneAndUpdate({idVLTG: id_uv, type: {$in: [0, 2]}}, {updatedAt: time}, {new: true});
+      let ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: {$in: [0, 2]}}, {updatedAt: time}, {new: true});
       if(ungVien) {
         return functions.success(res, "Lam moi ung vien thanh cong!");
       }
@@ -551,7 +551,7 @@ exports.lamMoiUngVien = async(req, res, next) => {
 
 exports.getThongBaoUv = async(req, res, next) => {
   try{
-    let id_uv = req.user.data.idVLTG;
+    let id_uv = req.user.data.idTimViec365;
     let thongBao = await ThongBaoUv.find({td_uv: id_uv});
     return functions.success(res, "Lay ra thong bao thanh cong", {data: thongBao});
   }catch(error) {
@@ -575,9 +575,9 @@ exports.xoaThongBaoUv = async(req, res, next) => {
 
 exports.getInfoCandidate = async(req, res, next) => {
   try{
-    let id_uv = req.user.data.idVLTG;
-    let uv = await Users.findOne({idVLTG: id_uv, type: 0}, {
-      "idVLTG": "$idVLTG",
+    let id_uv = req.user.data.idTimViec365;
+    let uv = await Users.findOne({idTimViec365: id_uv, type: 0}, {
+      "idTimViec365": "$idTimViec365",
       "userName": "$userName",
       "email": "$email",
       "emailContact": "$emailContact",
@@ -611,7 +611,7 @@ exports.getInfoCandidate = async(req, res, next) => {
 
 exports.updateInfoCandidate = async(req, res, next) => {
   try{
-    let id_uv = req.user.data.idVLTG;
+    let id_uv = req.user.data.idTimViec365;
     let {userName, phone, city, district, address, birthday, gender, married} = req.body;
     if(userName && phone && city && district && address && birthday && gender && married) {
       let checkPhone = functions.checkPhoneNumber(phone);
@@ -619,7 +619,7 @@ exports.updateInfoCandidate = async(req, res, next) => {
       if(checkPhone && checkDate) {
         birthday = functions.convertTimestamp(birthday);
         let time = functions.convertTimestamp(Date.now());
-        let ungVien = await Users.findOneAndUpdate({idVLTG: id_uv, type: 0}, {
+        let ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {
           userName: userName,
           phone: phone,
           city: city,
@@ -645,8 +645,8 @@ exports.updateInfoCandidate = async(req, res, next) => {
 
 exports.updateAvatarCandidate = async(req, res, next) => {
   try{
-    let id_uv = req.user.data.idVLTG;
-    let ungVien = await Users.findOne({idVLTG: id_uv, type: 0});
+    let id_uv = req.user.data.idTimViec365;
+    let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0});
     let time = functions.convertTimestamp(Date.now());
     if(ungVien) {
       if(req.files && req.files.avatar) {
@@ -656,7 +656,7 @@ exports.updateAvatarCandidate = async(req, res, next) => {
           let time_created = ungVien.createdAt;
           if(!time_created) time_created = time;
           let nameAvatar = await vltgService.uploadFileNameRandom(folder_img, time_created, avatar);
-          await Users.findOneAndUpdate({idVLTG: id_uv, type: 0}, {avatarUser: nameAvatar, updatedAt: time}, {new: true});
+          await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {avatarUser: nameAvatar, updatedAt: time}, {new: true});
           return functions.success(res, "Update avatar ung vien success!");
         }
         return functions.setError(res, "Anh khong dung dinh dang hoac qua lon!", 400);
@@ -673,13 +673,13 @@ exports.updateStatusSearch = async(req, res, next) => {
   try{
     let id_uv = req.body.id_uv;
     let status = req.body.status;
-    if(!id_uv) id_uv = req.user.data.idVLTG;
+    if(!id_uv) id_uv = req.user.data.idTimViec365;
     id_uv = Number(id_uv);
-    let ungVien = await Users.findOne({idVLTG: id_uv, type: 0}, {idVLTG: 1, "inforVLTG.uv_search": 1});
+    let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0}, {idTimViec365: 1, "inforVLTG.uv_search": 1});
     let time = functions.convertTimestamp(Date.now());
     if(ungVien) {
       if(!status) status = 0;
-      await Users.findOneAndUpdate({idVLTG: id_uv}, {updatedAt: time, "inforVLTG.uv_search": status});
+      await Users.findOneAndUpdate({idTimViec365: id_uv}, {updatedAt: time, "inforVLTG.uv_search": status});
       return functions.success(res, "update status search candidate success!");
     }
     return functions.setError(res, "Nha tuyen dung khong ton tai!", 400);
