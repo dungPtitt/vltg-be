@@ -177,13 +177,13 @@ exports.getModules = async(req, res, next) => {
 
 exports.danhSachUngVienAndNtd = async(req, res, next) => {
   try{
-    let {type, idVLTG, page, pageSize, phone, email, fromDate, toDate, source} = req.body;
+    let {type, idTimViec365, page, pageSize, phone, email, fromDate, toDate, source} = req.body;
     if(!page) page = 1;
     if(!pageSize) pageSize = 30;
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let condition = {idVLTG: {$nin: [null, 0]}, inforVLTG: {$ne: null}};
+    let condition = {idTimViec365: {$nin: [null, 0]}, inforVLTG: {$ne: null}};
 
     //phan biet danh sach nha tuyen dung <> ung vien
     //tk ung vien
@@ -206,16 +206,16 @@ exports.danhSachUngVienAndNtd = async(req, res, next) => {
     if (toDate && fromDate) condition.createdAt = { $gte: fromDate, $lte: toDate };
     //
     if(source) condition["inforVLTG.source"] = Number(source);
-    if(idVLTG) condition.idVLTG = Number(idVLTG);
+    if(idTimViec365) condition.idTimViec365 = Number(idTimViec365);
     let danhSachUngVien = await Users.aggregate([
       {$match: condition},
-      {$sort: {idVLTG: -1}},
+      {$sort: {idTimViec365: -1}},
       {$skip: skip},
       {$limit: pageSize},
       {
         $lookup: {
             from: "VLTG_UvCvmm",
-            localField: "idVLTG",
+            localField: "idTimViec365",
             foreignField: "id_uv_cvmm",
             as: "CVMM"
         }
@@ -224,7 +224,7 @@ exports.danhSachUngVienAndNtd = async(req, res, next) => {
       {
         $project: {
             "_id": "$_id", 
-            "idVLTG": "$idVLTG", 
+            "idTimViec365": "$idTimViec365", 
             "userName": "$userName", 
             "phone": "$phone", 
             "email": "$email", 
@@ -280,11 +280,11 @@ exports.createUngVien = async(req, res, next) => {
         uv_nganhnghe = uv_nganhnghe.join(", ");
         uv_diadiem = uv_diadiem.join(", ");
         let alias = functions.renderAlias(userName);
-        const maxIdVLTG = await functions.getMaxIdByField(Users, 'idVLTG');
+        const maxIdVLTG = await functions.getMaxIdByField(Users, 'idTimViec365');
         const max_id = await functions.getMaxIdByField(Users, '_id');
         let user = new Users({
           _id: max_id,
-          idVLTG: maxIdVLTG,
+          idTimViec365: maxIdVLTG,
           type: 0,
           userName: userName,
           alias: alias,
@@ -323,11 +323,11 @@ exports.createUngVien = async(req, res, next) => {
 
 exports.updateUngVien = async(req, res, next) => {
   try{
-    let {idVLTG, userName, phone, email, password, city, district, address, uv_congviec, uv_diadiem, uv_nganhnghe, day} = req.body;
-    if(idVLTG && userName && phone && email && password && city && district && address && uv_congviec && uv_diadiem && uv_diadiem.length>0 && uv_nganhnghe && uv_nganhnghe.length>0 && day && day.length>0) {
+    let {idTimViec365, userName, phone, email, password, city, district, address, uv_congviec, uv_diadiem, uv_nganhnghe, day} = req.body;
+    if(idTimViec365 && userName && phone && email && password && city && district && address && uv_congviec && uv_diadiem && uv_diadiem.length>0 && uv_nganhnghe && uv_nganhnghe.length>0 && day && day.length>0) {
       let checkPhone = functions.checkPhoneNumber(phone);
       let checkEmail = functions.checkEmail(email);
-      idVLTG = Number(idVLTG);
+      idTimViec365 = Number(idTimViec365);
       if(checkPhone && checkEmail) {
         let time_created = functions.convertTimestamp(Date.now());
         let avatar = (req.files && req.files.avatar)? req.files.avatar: null;
@@ -344,7 +344,7 @@ exports.updateUngVien = async(req, res, next) => {
         uv_nganhnghe = uv_nganhnghe.join(", ");
         uv_diadiem = uv_diadiem.join(", ");
         let alias = functions.renderAlias(userName);
-        let user = await Users.findOneAndUpdate({idVLTG: idVLTG, type: 0}, {
+        let user = await Users.findOneAndUpdate({idTimViec365: idTimViec365, type: 0}, {
           userName: userName,
           alias: alias,
           phone: phone,
@@ -363,11 +363,11 @@ exports.updateUngVien = async(req, res, next) => {
             nganh_nghe: uv_nganhnghe,
             dia_diem: uv_diadiem
           };
-          let cvmm = await UvCvmm.findOne({id_uv_cvmm: idVLTG});
+          let cvmm = await UvCvmm.findOne({id_uv_cvmm: idTimViec365});
           if(!cvmm) {
-            fieldCvmm.id_uv_cvmm = idVLTG;
+            fieldCvmm.id_uv_cvmm = idTimViec365;
           }
-          await UvCvmm.findOneAndUpdate({id_uv_cvmm: idVLTG}, fieldCvmm, {new: true, upsert: true});
+          await UvCvmm.findOneAndUpdate({id_uv_cvmm: idTimViec365}, fieldCvmm, {new: true, upsert: true});
           return functions.success(res, "Update ung vien sucess!");
         }
         return functions.setError(res, "Ung vien not found!");
@@ -386,7 +386,7 @@ exports.activeUngVien = async (req, res, next) => {
     if(id_uv) {
       id_uv = Number(id_uv);
       if(!active) active = 0;
-      let ungVien = await Users.findOneAndUpdate({idVLTG: id_uv, type: 0}, {"inforVLTG.uv_active": active});
+      let ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {"inforVLTG.uv_active": active});
       if(ungVien) {
         return functions.success(res, "active ung vien thanh cong!");
       }
@@ -418,11 +418,11 @@ exports.createCompany = async(req, res, next) => {
           }
         }
         let alias = functions.renderAlias(userName);
-        const maxIdVLTG = await functions.getMaxIdByField(Users, 'idVLTG');
+        const maxIdVLTG = await functions.getMaxIdByField(Users, 'idTimViec365');
         const max_id = await functions.getMaxIdByField(Users, '_id');
         let user = new Users({
           _id: max_id,
-          idVLTG: maxIdVLTG,
+          idTimViec365: maxIdVLTG,
           type: 1,
           userName: userName,
           alias: alias,
@@ -453,11 +453,11 @@ exports.createCompany = async(req, res, next) => {
 
 exports.updateCompany = async(req, res, next) => {
   try{
-    let {idVLTG, userName, phone, email, password, city, district, address} = req.body;
-    if(idVLTG && userName && phone && email && password && city && district && address) {
+    let {idTimViec365, userName, phone, email, password, city, district, address} = req.body;
+    if(idTimViec365 && userName && phone && email && password && city && district && address) {
       let checkPhone = functions.checkPhoneNumber(phone);
       let checkEmail = functions.checkEmail(email);
-      idVLTG = Number(idVLTG);
+      idTimViec365 = Number(idTimViec365);
       if(checkPhone && checkEmail) {
         let time_created = functions.convertTimestamp(Date.now());
         let avatar = (req.files && req.files.avatar)? req.files.avatar: null;
@@ -471,7 +471,7 @@ exports.updateCompany = async(req, res, next) => {
           }
         }
         let alias = functions.renderAlias(userName);
-        let user = await Users.findOneAndUpdate({idVLTG: idVLTG, type: 1}, {
+        let user = await Users.findOneAndUpdate({idTimViec365: idTimViec365, type: 1}, {
           userName: userName,
           alias: alias,
           phone: phone,
@@ -502,7 +502,7 @@ exports.activeCompany = async (req, res, next) => {
     if(id_ntd) {
       id_ntd = Number(id_ntd);
       if(!active) active = 0;
-      let ntd = await Users.findOneAndUpdate({idVLTG: id_ntd, type: 1}, {"inforVLTG.ntd_active": active});
+      let ntd = await Users.findOneAndUpdate({idTimViec365: id_ntd, type: 1}, {"inforVLTG.ntd_active": active});
       if(ntd) {
         return functions.success(res, "active ung vien thanh cong!");
       }
@@ -548,9 +548,9 @@ exports.danhSachTin = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "id_ntd",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             pipeline: [
-                { $match: {idVLTG: {$nin: [0, null]}, inforVLTG: {$ne: null}, type: 1 } },
+                { $match: {idTimViec365: {$nin: [0, null]}, inforVLTG: {$ne: null}, type: 1 } },
             ],
             as: "NTD"
         }
@@ -601,7 +601,7 @@ exports.danhSachTin = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "id_ntd",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             as: "NTD"
         }
       },
@@ -636,7 +636,7 @@ exports.createTin = async(req, res, next) => {
     }
     id_ntd = Number(id_ntd);
     let time = functions.convertTimestamp(Date.now());
-    let ntd = await Users.findOne({idVLTG: id_ntd, type: 1});
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
     if(ntd) {
       let checkTrungTitle = await ViecLam.findOne({id_ntd: id_ntd, vi_tri: vi_tri});
       if(!checkTrungTitle) {
@@ -730,7 +730,7 @@ exports.updateTin = async(req, res, next) => {
     id_ntd = Number(id_ntd);
     id_vieclam = Number(id_vieclam);
     let time = functions.convertTimestamp(Date.now());
-    let ntd = await Users.findOne({idVLTG: id_ntd, type: 1});
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
     if(ntd) {
       if(functions.checkDate(time_td) && functions.checkDate(fist_time) && functions.checkDate(last_time)) {
           if(functions.checkPhoneNumber(phone_lh)) {
@@ -946,7 +946,7 @@ exports.deleteManyByModule = async (req, res, next) => {
 
             //ung vien va nha tuyen dung
             if (moduleId == 95 || moduleId==96) {
-                await Users.deleteMany({ idVLTG: { $in: arrIdDelete } });
+                await Users.deleteMany({ idTimViec365: { $in: arrIdDelete } });
                 if(moduleId == 95) {
                   await UvCvmm.deleteMany({ id_uv_cvmm: { $in: arrIdDelete } });
                 }

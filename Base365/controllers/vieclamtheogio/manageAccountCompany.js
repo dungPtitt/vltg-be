@@ -20,7 +20,7 @@ const folder_img = "user_ntd";
 
 exports.danhSachTinTuyenDungMoi = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let type = req.user.data.type;
     if(type == 1) {
       let {page, pageSize} = req.body;
@@ -53,7 +53,7 @@ exports.danhSachTinTuyenDungMoi = async(req, res, next) => {
 
 exports.quanLyChung = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let type = req.user.data.type;
     if(type == 1) {
       let {page, pageSize} = req.body;
@@ -108,7 +108,7 @@ exports.quanLyChung = async(req, res, next) => {
           $lookup: {
               from: "Users",
               localField: "id_uv",
-              foreignField: "idVLTG",
+              foreignField: "idTimViec365",
               as: "UngVien"
           }
         },
@@ -123,7 +123,7 @@ exports.quanLyChung = async(req, res, next) => {
           }
         }
       ]);
-      let ntd = await Users.findOne({idVLTG: id_ntd, type: 1}, {"inforVLTG.diem_free": 1});
+      let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1}, {"inforVLTG.diem_free": 1});
       let diem_free = 0;
       if(ntd) diem_free = (ntd.inforVLTG && ntd.inforVLTG.diem_free) ? ntd.inforVLTG.diem_free: 0;
       let totalHoSoUngTuyen = await functions.findCount(UngTuyen, {id_ntd: id_ntd});
@@ -154,21 +154,21 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let id_ntd = (req.user && req.user.data)? req.user.data.idVLTG: null;
+    let id_ntd = (req.user && req.user.data)? req.user.data.idTimViec365: null;
     // inforVLTG.uv_search
-    let condition = {idVLTG: {$nin: [null, 0]}, type: {$in: [0, 2]}, "inforVLTG.uv_search": 1};
+    let condition = {idTimViec365: {$nin: [null, 0]}, type: {$in: [0, 2]}, "inforVLTG.uv_search": 1};
     let condition2 = {};
     if(id_nganh) condition2["CVMM.nganh_nghe"] = new RegExp(id_nganh, 'i');
     if(id_city) condition.city = Number(id_city);
     let danhSachUngVien = await Users.aggregate([
       {$match: condition},
-      {$sort: {idVLTG: -1}},
+      {$sort: {idTimViec365: -1}},
       {$skip: skip},
       {$limit: pageSize},
       {
         $lookup: {
             from: "VLTG_UvCvmm",
-            localField: "idVLTG",
+            localField: "idTimViec365",
             foreignField: "id_uv_cvmm",
             as: "CVMM"
         }
@@ -178,7 +178,7 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
       {
         $project: {
             "_id": "$_id",
-            "idVLTG": "$idVLTG",
+            "idTimViec365": "$idTimViec365",
             "district": "$district",
             "city": "$city",
             "userName": "$userName",
@@ -196,7 +196,7 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
       let check_ntd_xem_uv = false;
       let check_xem_uv = false;
       let check_ntd_save_uv = false;
-      let id_uv = danhSachUngVien[i].idVLTG;
+      let id_uv = danhSachUngVien[i].idTimViec365;
 
       //dung diem loc de xem
       let ntd_xem_uv = await NtdXemUv.findOne({id_ntd: id_ntd, id_uv: id_uv});
@@ -217,7 +217,7 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
       {
         $lookup: {
             from: "VLTG_UvCvmm",
-            localField: "idVLTG",
+            localField: "idTimViec365",
             foreignField: "id_uv_cvmm",
             as: "CVMM"
         }
@@ -237,14 +237,14 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
 
 exports.thongKeUngVien = async(req, res, next) => {
   try{
-    let condition = {idVLTG: {$nin: [null, 0]}, type: {$in: [0, 2]}, "inforVLTG.uv_search": 1};
+    let condition = {idTimViec365: {$nin: [null, 0]}, type: {$in: [0, 2]}, "inforVLTG.uv_search": 1};
     let totalHinhThuc = [];
     let listCandidate = await Users.aggregate([
       {$match: condition},
       {
         $lookup: {
             from: "VLTG_UvCvmm",
-            localField: "idVLTG",
+            localField: "idTimViec365",
             foreignField: "id_uv_cvmm",
             as: "CVMM"
         }
@@ -253,7 +253,7 @@ exports.thongKeUngVien = async(req, res, next) => {
       {
         $project: {
             "_id": "$_id", 
-            "idVLTG": "$idVLTG", 
+            "idTimViec365": "$idTimViec365", 
             "district": "$district", 
             "city": "$city", 
             "userName": "$userName", 
@@ -318,7 +318,7 @@ exports.thongKeDanhSachUngVien = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let condition = {idVLTG: {$nin: [null, 0]}, type: 0, "inforVLTG.uv_search": 1};
+    let condition = {idTimViec365: {$nin: [null, 0]}, type: 0, "inforVLTG.uv_search": 1};
     let condition2 = {};
 
     if(id_nganh) condition2["uv_nganh_nghe"] = new RegExp(`\\b${id_nganh}\\b`);
@@ -333,7 +333,7 @@ exports.thongKeDanhSachUngVien = async(req, res, next) => {
       {
         $lookup: {
             from: "VLTG_UvCvmm",
-            localField: "idVLTG",
+            localField: "idTimViec365",
             foreignField: "id_uv_cvmm",
             as: "CVMM"
         }
@@ -342,7 +342,7 @@ exports.thongKeDanhSachUngVien = async(req, res, next) => {
       {
         $project: {
             "_id": "$_id", 
-            "idVLTG": "$idVLTG", 
+            "idTimViec365": "$idTimViec365", 
             "district": "$district", 
             "city": "$city", 
             "userName": "$userName", 
@@ -362,12 +362,12 @@ exports.thongKeDanhSachUngVien = async(req, res, next) => {
       {$match: condition2},
     ]);
     //kiem tra ntd da xem, luu ung vien chua
-    let id_ntd = (req.user && req.user.data)? req.user.data.idVLTG: null;
+    let id_ntd = (req.user && req.user.data)? req.user.data.idTimViec365: null;
     for(let i=0; i<danhSachUngVien.length; i++) {
       let check_ntd_xem_uv = false;
       let check_xem_uv = false;
       let check_ntd_save_uv = false;
-      let id_uv = danhSachUngVien[i].idVLTG;
+      let id_uv = danhSachUngVien[i].idTimViec365;
 
       let ntd_xem_uv = await NtdXemUv.findOne({id_ntd: id_ntd, id_uv: id_uv});
       if(ntd_xem_uv) check_ntd_xem_uv = true;
@@ -387,7 +387,7 @@ exports.thongKeDanhSachUngVien = async(req, res, next) => {
       {
         $lookup: {
             from: "VLTG_UvCvmm",
-            localField: "idVLTG",
+            localField: "idTimViec365",
             foreignField: "id_uv_cvmm",
             as: "CVMM"
         }
@@ -396,7 +396,7 @@ exports.thongKeDanhSachUngVien = async(req, res, next) => {
       {
         $project: {
             "_id": "$_id", 
-            "idVLTG": "$idVLTG", 
+            "idTimViec365": "$idTimViec365", 
             "district": "$district", 
             "city": "$city", 
             "userName": "$userName", 
@@ -432,8 +432,8 @@ exports.chiTietUngVien = async(req, res, next) => {
     if(id_uv) {
       id_uv = Number(id_uv);
       let id_ntd = null;
-      if(req.user && req.user.data) id_ntd = req.user.data.idVLTG;
-      let ungVien = await Users.findOne({idVLTG: id_uv});
+      if(req.user && req.user.data) id_ntd = req.user.data.idTimViec365;
+      let ungVien = await Users.findOne({idTimViec365: id_uv});
       if(ungVien) {
         //cap nhat vao model XemUv
         let maxIdXemUv = await functions.getMaxIdByField(XemUv, 'xm_id');
@@ -446,15 +446,15 @@ exports.chiTietUngVien = async(req, res, next) => {
         //cap nhat luot xem
         let luot_xem = (ungVien.inforVLTG && ungVien.inforVLTG.luot_xem)? ungVien.inforVLTG.luot_xem: 0;
         luot_xem++;
-        await Users.findOneAndUpdate({idVLTG: id_uv}, {"inforVLTG.luot_xem": luot_xem}, {new: true});
+        await Users.findOneAndUpdate({idTimViec365: id_uv}, {"inforVLTG.luot_xem": luot_xem}, {new: true});
 
         //lay ra thong tin ung vien
         ungVien = await Users.aggregate([
-          {$match: {idVLTG: id_uv}},
+          {$match: {idTimViec365: id_uv}},
           {
             $lookup: {
                 from: "VLTG_UvCvmm",
-                localField: "idVLTG",
+                localField: "idTimViec365",
                 foreignField: "id_uv_cvmm",
                 as: "CVMM"
             }
@@ -463,7 +463,7 @@ exports.chiTietUngVien = async(req, res, next) => {
           {
             $lookup: {
                 from: "VLTG_UvKnlv",
-                localField: "idVLTG",
+                localField: "idTimViec365",
                 foreignField: "id_uv_knlv",
                 as: "KNLV"
             }
@@ -471,7 +471,7 @@ exports.chiTietUngVien = async(req, res, next) => {
           {
             $project: {
                 "_id": "$_id", 
-                "idVLTG": "$idVLTG", 
+                "idTimViec365": "$idTimViec365", 
                 "district": "$district", 
                 "city": "$city", 
                 "userName": "$userName", 
@@ -516,16 +516,16 @@ exports.chiTietUngVien = async(req, res, next) => {
         ungVien.arrNameNN = arrNameNN;
 
         //lay ra danh sach ung vien lien quan
-        let condition = {idVLTG: {$nin: [null, 0, id_uv]}, type: {$in: [0, 2]}};
+        let condition = {idTimViec365: {$nin: [null, 0, id_uv]}, type: {$in: [0, 2]}};
         let condition2 = {"CVMM.nganh_nghe": new RegExp(`\\b${nganhNghe[0]}\\b`)};
         let listUVLienQuan = await Users.aggregate([
           {$match: condition},
-          {$sort: {idVLTG: -1}},
+          {$sort: {idTimViec365: -1}},
           {$limit: 6},
           {
             $lookup: {
                 from: "VLTG_UvCvmm",
-                localField: "idVLTG",
+                localField: "idTimViec365",
                 foreignField: "id_uv_cvmm",
                 as: "CVMM"
             }
@@ -535,7 +535,7 @@ exports.chiTietUngVien = async(req, res, next) => {
           {
             $project: {
                 "_id": "$_id", 
-                "idVLTG": "$idVLTG", 
+                "idTimViec365": "$idTimViec365", 
                 "district": "$district", 
                 "city": "$city", 
                 "userName": "$userName", 
@@ -580,7 +580,7 @@ exports.chiTietUngVien = async(req, res, next) => {
 
 exports.dangTin = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let type = req.user.data.type;
     if(type == 1) {
       let time = functions.convertTimestamp(Date.now());
@@ -688,7 +688,7 @@ exports.danhSachTinDaDang = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let condition = {id_ntd: id_ntd};
     if(id_viec) condition.id_vieclam = Number(id_viec);
     let total = await functions.findCount(ViecLam, condition);
@@ -710,7 +710,7 @@ exports.danhSachTinDaDang = async(req, res, next) => {
 
 exports.suaTin = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let type = req.user.data.type;
     if(type == 1) {
       let time = functions.convertTimestamp(Date.now());
@@ -827,7 +827,7 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let condition = {id_ntd: id_ntd};
     if(status) condition.status = Number(status); 
     let ungVienMoiUngTuyen = await UngTuyen.aggregate([
@@ -848,7 +848,7 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "id_uv",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             as: "UngVien"
         }
       },
@@ -924,7 +924,7 @@ exports.ungVienTuDiemLoc = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let condition = {id_ntd: id_ntd};
     if(ket_qua) condition.ket_qua = Number(ket_qua); 
     let ungVienMoiUngTuyen = await NtdXemUv.aggregate([
@@ -936,7 +936,7 @@ exports.ungVienTuDiemLoc = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "id_uv",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             as: "UngVien"
         }
       },
@@ -1000,8 +1000,8 @@ exports.updateGhiChuNtdXemUv = async(req, res, next) => {
 
 exports.getDiem = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
-    let ntd = await Users.findOne({idVLTG: id_ntd}, {inforVLTG: 1});
+    let id_ntd = req.user.data.idTimViec365;
+    let ntd = await Users.findOne({idTimViec365: id_ntd}, {inforVLTG: 1});
     if(ntd) {
       return functions.success(res, "Get diem thanh cong", {data: ntd});
     }
@@ -1013,12 +1013,12 @@ exports.getDiem = async(req, res, next) => {
 
 exports.ntdXemUv = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
-    let ntd = await Users.findOne({idVLTG: id_ntd}, {inforVLTG: 1});
+    let id_ntd = req.user.data.idTimViec365;
+    let ntd = await Users.findOne({idTimViec365: id_ntd}, {inforVLTG: 1});
     let id_uv = req.body.id_uv;
     if(ntd && id_uv) {
       id_uv = Number(id_uv);
-      let ungVien = await Users.findOne({idVLTG: id_uv});
+      let ungVien = await Users.findOne({idTimViec365: id_uv});
       if(ungVien) {
         let check = await NtdXemUv.findOne({id_ntd: id_ntd, id_uv: id_uv});
         if(check) return functions.setError(res, "Nha tuyen dung da xem tt cua ung vien!");
@@ -1033,10 +1033,10 @@ exports.ntdXemUv = async(req, res, next) => {
         if(diem_t>0) {
           if(diem_free > 0) {
             diem_free -= 1;
-            await Users.findOneAndUpdate({idVLTG: id_ntd}, {"inforVLTG.diem_free": diem_free});
+            await Users.findOneAndUpdate({idTimViec365: id_ntd}, {"inforVLTG.diem_free": diem_free});
           }else {
             diem_mua -= 1;
-            await Users.findOneAndUpdate({idVLTG: id_ntd}, {"inforVLTG.diem_mua": diem_mua});
+            await Users.findOneAndUpdate({idTimViec365: id_ntd}, {"inforVLTG.diem_mua": diem_mua});
           }
           //
           let maxId = await functions.getMaxIdByField(NtdXemUv, 'stt');
@@ -1080,8 +1080,8 @@ exports.ntdXemUv = async(req, res, next) => {
 
 exports.congThemDiem = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
-    let ntd = await Users.findOneAndUpdate({idVLTG: id_ntd}, {"inforVLTG.diem_free": 100}, {new: true});
+    let id_ntd = req.user.data.idTimViec365;
+    let ntd = await Users.findOneAndUpdate({idTimViec365: id_ntd}, {"inforVLTG.diem_free": 100}, {new: true});
     if(ntd) {
       return functions.success(res, "Cong diem thanh cong");
     }
@@ -1100,7 +1100,7 @@ exports.ungVienDaXem = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let condition = {xm_id_ntd: id_ntd};
     let ungVienDaXem = await XemUv.aggregate([
       {$match: condition},
@@ -1111,7 +1111,7 @@ exports.ungVienDaXem = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "xm_id_uv",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             as: "UngVien"
         }
       },
@@ -1164,7 +1164,7 @@ exports.ungVienDaLuu = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let condition = {id_ntd: id_ntd};
     let ungVienDaLuu = await NtdSaveUv.aggregate([
       {$match: condition},
@@ -1175,7 +1175,7 @@ exports.ungVienDaLuu = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "id_uv",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             as: "UngVien"
         }
       },
@@ -1219,7 +1219,7 @@ exports.ungVienDaLuu = async(req, res, next) => {
 exports.xoaUngVienDaLuu = async(req, res, next) => {
   try{
     let id_uv = req.body.id_uv;
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     if(id_uv && id_ntd) {
       id_uv = Number(id_uv);
       let ntdSaveUv = await NtdSaveUv.findOneAndDelete({id_uv: id_uv, id_ntd: id_ntd});
@@ -1236,12 +1236,12 @@ exports.xoaUngVienDaLuu = async(req, res, next) => {
 
 exports.ntdSaveUv = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let id_uv = req.body.id_uv;
     if(id_uv) {
       id_uv = Number(id_uv);
-      let ntd = await Users.findOne({idVLTG: id_ntd});
-      let ungVien = await Users.findOne({idVLTG: id_uv});
+      let ntd = await Users.findOne({idTimViec365: id_ntd});
+      let ungVien = await Users.findOne({idTimViec365: id_uv});
       if(ntd && ungVien) {
         let maxId = await functions.getMaxIdByField(NtdSaveUv, 'id');
         let ntdSaveUv = new NtdSaveUv({
@@ -1280,7 +1280,7 @@ exports.ntdSaveUv = async(req, res, next) => {
 
 exports.getThongBaoNtd = async(req, res, next) => {
   try{
-    let $id_ntd = req.user.data.idVLTG;
+    let $id_ntd = req.user.data.idTimViec365;
     let thongBao = await ThongBaoNtd.find({td_ntd: $id_ntd});
     return functions.success(res, "Lay ra thong bao thanh cong", {data: thongBao});
   }catch(error) {
@@ -1304,9 +1304,9 @@ exports.xoaThongBaoNtd = async(req, res, next) => {
 
 exports.getInfoCompany = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
-    let ntd = await Users.findOne({idVLTG: id_ntd, type: 1}, {
-      "idVLTG": "$idVLTG",
+    let id_ntd = req.user.data.idTimViec365;
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1}, {
+      "idTimViec365": "$idTimViec365",
       "userName": "$userName",
       "email": "$email",
       "emailContact": "$emailContact",
@@ -1340,14 +1340,14 @@ exports.getInfoCompany = async(req, res, next) => {
 
 exports.updateInfoCompany = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
+    let id_ntd = req.user.data.idTimViec365;
     let time = functions.convertTimestamp(Date.now());
     let {userName, phone, city, district, address, description, com_size, usc_name, usc_name_add, usc_name_phone, usc_name_email, usc_mst, usc_website} = req.body;
     if(userName && phone && city && district && address && description && com_size && usc_name && usc_name_add && usc_name_phone && usc_name_email) {
       let checkPhone1 = await functions.checkPhoneNumber(phone);
       let checkPhone2 = await functions.checkPhoneNumber(usc_name_phone);
       if(checkPhone1 && checkPhone2) {
-        let ntd = await Users.findOneAndUpdate({idVLTG: id_ntd, type: 1}, {
+        let ntd = await Users.findOneAndUpdate({idTimViec365: id_ntd, type: 1}, {
           userName: userName,
           phone: phone,
           city: city,
@@ -1378,8 +1378,8 @@ exports.updateInfoCompany = async(req, res, next) => {
 
 exports.updateAvatarCompany = async(req, res, next) => {
   try{
-    let id_ntd = req.user.data.idVLTG;
-    let ntd = await Users.findOne({idVLTG: id_ntd, type: 1});
+    let id_ntd = req.user.data.idTimViec365;
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
     let time = functions.convertTimestamp(Date.now());
     if(ntd) {
       if(req.files && req.files.avatar) {
@@ -1389,7 +1389,7 @@ exports.updateAvatarCompany = async(req, res, next) => {
           let time_created = ntd.createdAt;
           if(!time_created) time_created = time;
           let nameAvatar = await vltgService.uploadFileNameRandom(folder_img, time_created, avatar);
-          await Users.findOneAndUpdate({idVLTG: id_ntd, type: 1}, {avatarUser: nameAvatar, updatedAt: time}, {new: true});
+          await Users.findOneAndUpdate({idTimViec365: id_ntd, type: 1}, {avatarUser: nameAvatar, updatedAt: time}, {new: true});
           return functions.success(res, "Update avatar company success!");
         }
         return functions.setError(res, "Anh khong dung dinh dang hoac qua lon!", 400);

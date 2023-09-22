@@ -57,7 +57,7 @@ exports.danhSachViecLam = async(req, res, next) => {
       id_vieclam = Number(id_vieclam);
       condition = {id_vieclam: id_vieclam};
       let viecLam = await ViecLam.findOne({id_vieclam: id_vieclam});
-      let id_uv = (req.user && req.user.data) ? req.user.data.idVLTG : 0;
+      let id_uv = (req.user && req.user.data) ? req.user.data.idTimViec365 : 0;
       if(viecLam) {
         //cap nhat luot xem
         let luot_xem = viecLam.luot_xem+1;
@@ -71,7 +71,7 @@ exports.danhSachViecLam = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -123,7 +123,7 @@ exports.danhSachViecLam = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -172,7 +172,7 @@ exports.danhSachViecLam = async(req, res, next) => {
         $lookup: {
             from: "Users",
             localField: "id_ntd",
-            foreignField: "idVLTG",
+            foreignField: "idTimViec365",
             as: "NTD"
         }
       },
@@ -274,7 +274,7 @@ exports.trangChu = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -311,7 +311,7 @@ exports.trangChu = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -451,7 +451,7 @@ exports.thongKeDanhSachViecLam = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -501,7 +501,7 @@ exports.viecLamTheoHinhThuc = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -548,7 +548,7 @@ exports.viecLamTheoNganhNghe = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -598,7 +598,7 @@ exports.viecLamTheoTinhThanh = async(req, res, next) => {
             $lookup: {
                 from: "Users",
                 localField: "id_ntd",
-                foreignField: "idVLTG",
+                foreignField: "idTimViec365",
                 as: "NTD"
             }
           },
@@ -642,8 +642,8 @@ exports.getInfoCompany = async(req, res, next) => {
     const skip = (page-1)*pageSize;
     if(id_ntd) {
       id_ntd = Number(id_ntd);
-      let ntd = await Users.findOne({idVLTG: id_ntd, type: 1, inforVLTG: {$ne: null}}, {
-        "idVLTG": "$idVLTG",
+      let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1, inforVLTG: {$ne: null}}, {
+        "idTimViec365": "$idTimViec365",
         "userName": "$userName",
         "address": "$address",
         "phone": "$phone",
