@@ -133,7 +133,7 @@ exports.checkCompany = async (req, res, next) => {
 
 exports.checkCandidate = async (req, res, next) => {
     let id_uv = req.user.data.idTimViec365;
-    let uv = await Users.findOne({idTimViec365: id_uv, type: {$in: [0, 2]}});
+    let uv = await Users.findOne({idTimViec365: id_uv, type: 0});
     if(uv) {
         return next();
     }
