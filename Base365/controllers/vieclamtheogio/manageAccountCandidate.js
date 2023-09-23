@@ -253,7 +253,7 @@ exports.deleteKinhNghiemLamViec = async(req, res, next) => {
 exports.getBuoiCoTheDiLam = async(req, res, next) => {
   try{
     let userId = req.user.data.idTimViec365;
-    let user_uv = await Users.findOne({idTimViec365: userId}, {
+    let user_uv = await Users.findOne({idTimViec365: userId, type: 0}, {
       "userName": "$userName",
       "phone": "$phone",
       "phoneTK": "$phoneTK",
@@ -283,7 +283,7 @@ exports.updateBuoiCoTheDiLam = async(req, res, next) => {
     if(day && day.length>0) {
       day = day.join(", ");
       let time = functions.convertTimestamp(Date.now());
-      let user_uv = await Users.findOneAndUpdate({idTimViec365: userId}, {
+      let user_uv = await Users.findOneAndUpdate({idTimViec365: userId, type: 0}, {
         updatedAt: time,
         "inforVLTG.uv_day": day
       }, {new: true});
@@ -501,7 +501,7 @@ exports.luuViecLam = async(req, res, next) => {
       id_viec = Number(id_viec);
       let viecLam = await ViecLam.findOne({id_vieclam: id_viec});
       if(viecLam) {
-        let ntd = await Users.findOne({idTimViec365: viecLam.id_ntd}, {userName: 1});
+        let ntd = await Users.findOne({idTimViec365: viecLam.id_ntd, type: 1}, {userName: 1});
         if(ntd) {
           let check = await UvSaveVl.findOne({id_uv: userId, id_viec: id_viec});
           if(check) {
@@ -536,8 +536,9 @@ exports.lamMoiUngVien = async(req, res, next) => {
   try{
     let id_uv = req.body.id_uv;
     if(id_uv) {
+      id_uv = Number(id_uv);
       let time = functions.convertTimestamp(Date.now());
-      let ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: {$in: [0, 2]}}, {updatedAt: time}, {new: true});
+      let ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {updatedAt: time}, {new: true});
       if(ungVien) {
         return functions.success(res, "Lam moi ung vien thanh cong!");
       }
@@ -679,7 +680,7 @@ exports.updateStatusSearch = async(req, res, next) => {
     let time = functions.convertTimestamp(Date.now());
     if(ungVien) {
       if(!status) status = 0;
-      await Users.findOneAndUpdate({idTimViec365: id_uv}, {updatedAt: time, "inforVLTG.uv_search": status});
+      await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {updatedAt: time, "inforVLTG.uv_search": status});
       return functions.success(res, "update status search candidate success!");
     }
     return functions.setError(res, "Nha tuyen dung khong ton tai!", 400);
