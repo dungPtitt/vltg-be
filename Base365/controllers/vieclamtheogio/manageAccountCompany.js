@@ -109,6 +109,9 @@ exports.quanLyChung = async(req, res, next) => {
               from: "Users",
               localField: "id_uv",
               foreignField: "idTimViec365",
+              pipeline: [
+                  { $match: { idTimViec365: { $nin: [0, null] } } },
+              ],
               as: "UngVien"
           }
         },
@@ -849,6 +852,9 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
             from: "Users",
             localField: "id_uv",
             foreignField: "idTimViec365",
+            pipeline: [
+                { $match: { idTimViec365: { $nin: [0, null] } } },
+            ],
             as: "UngVien"
         }
       },
@@ -937,6 +943,9 @@ exports.ungVienTuDiemLoc = async(req, res, next) => {
             from: "Users",
             localField: "id_uv",
             foreignField: "idTimViec365",
+            pipeline: [
+                { $match: { idTimViec365: { $nin: [0, null] } } },
+            ],
             as: "UngVien"
         }
       },
@@ -1112,6 +1121,9 @@ exports.ungVienDaXem = async(req, res, next) => {
             from: "Users",
             localField: "xm_id_uv",
             foreignField: "idTimViec365",
+            pipeline: [
+                { $match: { idTimViec365: { $nin: [0, null] } } },
+            ],
             as: "UngVien"
         }
       },
@@ -1176,6 +1188,9 @@ exports.ungVienDaLuu = async(req, res, next) => {
             from: "Users",
             localField: "id_uv",
             foreignField: "idTimViec365",
+            pipeline: [
+                { $match: { idTimViec365: { $nin: [0, null] } } },
+            ],
             as: "UngVien"
         }
       },
