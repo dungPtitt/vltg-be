@@ -603,7 +603,7 @@ exports.danhSachTin = async(req, res, next) => {
             localField: "id_ntd",
             foreignField: "idTimViec365",
             pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] } } },
+                { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
             ],
             as: "NTD"
         }

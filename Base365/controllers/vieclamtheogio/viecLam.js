@@ -73,7 +73,7 @@ exports.danhSachViecLam = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -128,7 +128,7 @@ exports.danhSachViecLam = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -180,7 +180,7 @@ exports.danhSachViecLam = async(req, res, next) => {
             localField: "id_ntd",
             foreignField: "idTimViec365",
             pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] } } },
+                { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
             ],
             as: "NTD"
         }
@@ -285,7 +285,7 @@ exports.trangChu = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -325,7 +325,7 @@ exports.trangChu = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -468,7 +468,7 @@ exports.thongKeDanhSachViecLam = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -521,7 +521,7 @@ exports.viecLamTheoHinhThuc = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -571,7 +571,7 @@ exports.viecLamTheoNganhNghe = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }
@@ -624,7 +624,7 @@ exports.viecLamTheoTinhThanh = async(req, res, next) => {
                 localField: "id_ntd",
                 foreignField: "idTimViec365",
                 pipeline: [
-                    { $match: { idTimViec365: { $nin: [0, null] } } },
+                    { $match: { idTimViec365: { $nin: [0, null] }, type: 1} },
                 ],
                 as: "NTD"
             }

@@ -110,7 +110,7 @@ exports.quanLyChung = async(req, res, next) => {
               localField: "id_uv",
               foreignField: "idTimViec365",
               pipeline: [
-                  { $match: { idTimViec365: { $nin: [0, null] } } },
+                  { $match: {idTimViec365: { $nin: [0, null] }, type: 0} },
               ],
               as: "UngVien"
           }
@@ -159,7 +159,7 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
     const skip = (page-1)*pageSize;
     let id_ntd = (req.user && req.user.data)? req.user.data.idTimViec365: null;
     // inforVLTG.uv_search
-    let condition = {idTimViec365: {$nin: [null, 0]}, type: {$in: [0, 2]}, "inforVLTG.uv_search": 1};
+    let condition = {idTimViec365: {$nin: [null, 0]}, type: 0, "inforVLTG.uv_search": 1};
     let condition2 = {};
     if(id_nganh) condition2["CVMM.nganh_nghe"] = new RegExp(id_nganh, 'i');
     if(id_city) condition.city = Number(id_city);
@@ -240,7 +240,7 @@ exports.danhSachUvTheoGio = async(req, res, next) => {
 
 exports.thongKeUngVien = async(req, res, next) => {
   try{
-    let condition = {idTimViec365: {$nin: [null, 0]}, type: {$in: [0, 2]}, "inforVLTG.uv_search": 1};
+    let condition = {idTimViec365: {$nin: [null, 0]}, type: 0, "inforVLTG.uv_search": 1};
     let totalHinhThuc = [];
     let listCandidate = await Users.aggregate([
       {$match: condition},
@@ -436,7 +436,7 @@ exports.chiTietUngVien = async(req, res, next) => {
       id_uv = Number(id_uv);
       let id_ntd = null;
       if(req.user && req.user.data) id_ntd = req.user.data.idTimViec365;
-      let ungVien = await Users.findOne({idTimViec365: id_uv});
+      let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0});
       if(ungVien) {
         //cap nhat vao model XemUv
         let maxIdXemUv = await functions.getMaxIdByField(XemUv, 'xm_id');
@@ -449,11 +449,11 @@ exports.chiTietUngVien = async(req, res, next) => {
         //cap nhat luot xem
         let luot_xem = (ungVien.inforVLTG && ungVien.inforVLTG.luot_xem)? ungVien.inforVLTG.luot_xem: 0;
         luot_xem++;
-        await Users.findOneAndUpdate({idTimViec365: id_uv}, {"inforVLTG.luot_xem": luot_xem}, {new: true});
+        await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {"inforVLTG.luot_xem": luot_xem}, {new: true});
 
         //lay ra thong tin ung vien
         ungVien = await Users.aggregate([
-          {$match: {idTimViec365: id_uv}},
+          {$match: {idTimViec365: id_uv, type: 0}},
           {
             $lookup: {
                 from: "VLTG_UvCvmm",
@@ -519,7 +519,7 @@ exports.chiTietUngVien = async(req, res, next) => {
         ungVien.arrNameNN = arrNameNN;
 
         //lay ra danh sach ung vien lien quan
-        let condition = {idTimViec365: {$nin: [null, 0, id_uv]}, type: {$in: [0, 2]}};
+        let condition = {idTimViec365: {$nin: [null, 0, id_uv]}, type: 0};
         let condition2 = {"CVMM.nganh_nghe": new RegExp(`\\b${nganhNghe[0]}\\b`)};
         let listUVLienQuan = await Users.aggregate([
           {$match: condition},
@@ -853,7 +853,7 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
             localField: "id_uv",
             foreignField: "idTimViec365",
             pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] } } },
+                { $match: { idTimViec365: { $nin: [0, null] }, type: 0} },
             ],
             as: "UngVien"
         }
@@ -944,7 +944,7 @@ exports.ungVienTuDiemLoc = async(req, res, next) => {
             localField: "id_uv",
             foreignField: "idTimViec365",
             pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] } } },
+                { $match: { idTimViec365: { $nin: [0, null] }, type: 0} },
             ],
             as: "UngVien"
         }
@@ -1010,7 +1010,7 @@ exports.updateGhiChuNtdXemUv = async(req, res, next) => {
 exports.getDiem = async(req, res, next) => {
   try{
     let id_ntd = req.user.data.idTimViec365;
-    let ntd = await Users.findOne({idTimViec365: id_ntd}, {inforVLTG: 1});
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1}, {inforVLTG: 1});
     if(ntd) {
       return functions.success(res, "Get diem thanh cong", {data: ntd});
     }
@@ -1023,11 +1023,11 @@ exports.getDiem = async(req, res, next) => {
 exports.ntdXemUv = async(req, res, next) => {
   try{
     let id_ntd = req.user.data.idTimViec365;
-    let ntd = await Users.findOne({idTimViec365: id_ntd}, {inforVLTG: 1});
+    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1}, {inforVLTG: 1});
     let id_uv = req.body.id_uv;
     if(ntd && id_uv) {
       id_uv = Number(id_uv);
-      let ungVien = await Users.findOne({idTimViec365: id_uv});
+      let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0});
       if(ungVien) {
         let check = await NtdXemUv.findOne({id_ntd: id_ntd, id_uv: id_uv});
         if(check) return functions.setError(res, "Nha tuyen dung da xem tt cua ung vien!");
@@ -1042,10 +1042,10 @@ exports.ntdXemUv = async(req, res, next) => {
         if(diem_t>0) {
           if(diem_free > 0) {
             diem_free -= 1;
-            await Users.findOneAndUpdate({idTimViec365: id_ntd}, {"inforVLTG.diem_free": diem_free});
+            await Users.findOneAndUpdate({idTimViec365: id_ntd, type: 1}, {"inforVLTG.diem_free": diem_free});
           }else {
             diem_mua -= 1;
-            await Users.findOneAndUpdate({idTimViec365: id_ntd}, {"inforVLTG.diem_mua": diem_mua});
+            await Users.findOneAndUpdate({idTimViec365: id_ntd, type: 1}, {"inforVLTG.diem_mua": diem_mua});
           }
           //
           let maxId = await functions.getMaxIdByField(NtdXemUv, 'stt');
@@ -1090,7 +1090,7 @@ exports.ntdXemUv = async(req, res, next) => {
 exports.congThemDiem = async(req, res, next) => {
   try{
     let id_ntd = req.user.data.idTimViec365;
-    let ntd = await Users.findOneAndUpdate({idTimViec365: id_ntd}, {"inforVLTG.diem_free": 100}, {new: true});
+    let ntd = await Users.findOneAndUpdate({idTimViec365: id_ntd, type: 1}, {"inforVLTG.diem_free": 100}, {new: true});
     if(ntd) {
       return functions.success(res, "Cong diem thanh cong");
     }
@@ -1122,7 +1122,7 @@ exports.ungVienDaXem = async(req, res, next) => {
             localField: "xm_id_uv",
             foreignField: "idTimViec365",
             pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] } } },
+                { $match: { idTimViec365: { $nin: [0, null] }, type: 0} },
             ],
             as: "UngVien"
         }
@@ -1189,7 +1189,7 @@ exports.ungVienDaLuu = async(req, res, next) => {
             localField: "id_uv",
             foreignField: "idTimViec365",
             pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] } } },
+                { $match: { idTimViec365: { $nin: [0, null] }, type: 0} },
             ],
             as: "UngVien"
         }
@@ -1255,8 +1255,8 @@ exports.ntdSaveUv = async(req, res, next) => {
     let id_uv = req.body.id_uv;
     if(id_uv) {
       id_uv = Number(id_uv);
-      let ntd = await Users.findOne({idTimViec365: id_ntd});
-      let ungVien = await Users.findOne({idTimViec365: id_uv});
+      let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
+      let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0});
       if(ntd && ungVien) {
         let maxId = await functions.getMaxIdByField(NtdSaveUv, 'id');
         let ntdSaveUv = new NtdSaveUv({
