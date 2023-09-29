@@ -160,8 +160,8 @@ exports.danhSachViecLam = async(req, res, next) => {
           viecLamTuongTu[i].linkAvatar = linkAvatar;
         }
         if(id_uv) {
-          let ungTuyen = await UngTuyen.findOne({id_uv: id_uv, id_viec: id_vieclam});
-          if(ungTuyen) nhanViec = true;
+          let ungTuyen = await UngTuyen.distinct('id_viec', {id_uv: id_uv, id_viec: id_vieclam});
+          if(ungTuyen.length>0) nhanViec = true;
           let uvLuuViec = await UvSaveVl.findOne({id_uv: id_uv, id_viec: id_vieclam});
           if(uvLuuViec) luuViec = true;
         }
@@ -443,12 +443,13 @@ exports.thongKeDanhSachViecLam = async(req, res, next) => {
     }
     if(id_hinhthuc) condition["hinh_thuc"] = Number(id_hinhthuc);
     if(id_city) {
-      condition["dia_diem"] = new RegExp(`\\b${id_city}\\b`);
+      // condition["dia_diem"] = new RegExp(`\\b${id_city}\\b`);
+      condition.dia_diem = Number(id_city);
       let blog = await City2.findOne({cit_id: Number(id_city)});
       if(blog) listBlog.push(blog);
     }
     if(district) {
-      condition.quan_huyen = new RegExp(`\\b${district}\\b`);
+      condition.quan_huyen = Number(district);
       let blog = await City2.findOne({cit_id: Number(district), cit_parent: {$gt: 0}});
       if(blog) listBlog.push(blog);
     }
