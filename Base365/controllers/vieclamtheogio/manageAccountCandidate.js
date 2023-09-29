@@ -309,43 +309,35 @@ exports.getViecLamDaUngTuyen = async(req, res, next) => {
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
 
-    let listViecLam = await UngTuyen.aggregate([
-      {$match: {id_uv: userId}},
+    let listViecLam = await ViecLam.aggregate([
+      {
+        $lookup: {
+            from: "VLTG_UngTuyen",
+            localField: "id_vieclam",
+            foreignField: "id_viec",
+            as: "UngTuyen"
+        }
+      },
+      {$match: {"UngTuyen.id_uv": userId}},
       {$sort: {id_ungtuyen: -1}},
       {$skip: skip},
       {$limit: pageSize},
       {
-        $lookup: {
-            from: "VLTG_ViecLam",
-            localField: "id_viec",
-            foreignField: "id_vieclam",
-            as: "ViecLam"
+        $project: {
+            "id_vieclam": "$id_vieclam",
+            "alias": "$alias",
+            "vi_tri": "$vi_tri",
+            "muc_luong": "$muc_luong",
+            "tra_luong": "$tra_luong",
+            "fist_time": "$fist_time",
+            "last_time": "$last_time",
+            "UngTuyen": "$UngTuyen",
         }
       },
-      {$unwind: { path: "$ViecLam", preserveNullAndEmptyArrays: true }},
-      {
-        $project: {
-            "id_ungtuyen": "$id_ungtuyen",
-            "id_uv": "$id_uv",
-            "id_ntd": "$id_ntd",
-            "id_viec": "$id_viec",
-            "ca_lam": "$ca_lam",
-            "gio_lam": "$gio_lam",
-            "day": "$day",
-            "ghi_chu": "$ghi_chu",
-            "status": "$status",
-            "created_at": "$created_at",
-            "alias": "$ViecLam.alias",
-            "vi_tri": "$ViecLam.vi_tri",
-            "muc_luong": "$ViecLam.muc_luong",
-            "tra_luong": "$ViecLam.tra_luong",
-            "fist_time": "$ViecLam.fist_time",
-            "last_time": "$ViecLam.last_time",
-        }
-      }
     ]);
 
-    let total = await functions.findCount(UngTuyen, {id_uv: userId});
+    let total = await UngTuyen.distinct('id_viec', {id_uv: userId});
+    total = total.length;
     return functions.success(res, "get danh sach viec lam da ung tuyen thanh cong", {total: total, data: listViecLam});
   }catch(error) {
     return functions.setError(res, error.message);
@@ -357,8 +349,8 @@ exports.deleteViecLamDaUngTuyen = async(req, res, next) => {
     let userId = req.user.data.idTimViec365;
     let id_viec = req.body.id_viec;
     if(id_viec) {
-      let ungTuyen = await UngTuyen.findOneAndDelete({id_uv: userId, id_viec: Number(id_viec)});
-      if(ungTuyen) {
+      let ungTuyen = await UngTuyen.deleteMany({id_uv: userId, id_viec: Number(id_viec)});
+      if(ungTuyen && ungTuyen.deletedCount > 0) {
         return functions.success(res, "Delete viec lam da ung tuyen thanh cong!");
       }
       return functions.setError(res, "Viec lam da ung tuyen not found", 405);
@@ -439,8 +431,8 @@ exports.deleteViecLamDaLuu = async(req, res, next) => {
 exports.nhanViec = async(req, res, next) => {
   try{
     let userId = req.user.data.idTimViec365;
-    let {id_viec, ca_lam, gio_lam, day} = req.body;
-    if(id_viec && ca_lam && gio_lam && day && day.length>0) {
+    let {id_viec, list_ca} = req.body;
+    if(id_viec && list_ca && list_ca.length>0) {
       id_viec = Number(id_viec);
       let viecLam = await ViecLam.findOne({id_vieclam: id_viec});
       if(viecLam) {
@@ -448,23 +440,28 @@ exports.nhanViec = async(req, res, next) => {
         let ungVien = await Users.findOne({idTimViec365: userId, type: 0});
         if(ntd && ungVien) {
           let check = await UngTuyen.findOne({id_uv: userId, id_viec: id_viec});
-          if(check) return functions.setError(res, "Ung vien da ung tuyen viec lam!", 400);
-          let idMax = await functions.getMaxIdByField(UngTuyen, 'id_ungtuyen');
-          day = day.join(" ");
-          let nhanViec = new UngTuyen({
-            id_ungtuyen: idMax,
-            id_uv: userId,
-            id_ntd: viecLam.id_ntd,
-            id_viec: id_viec,
-            ca_lam: ca_lam,
-            gio_lam: gio_lam,
-            day: day,
-            ghi_chu: "",
-            status: 1,
-            created_at: Date.now(),
-          });
-          nhanViec = nhanViec.save();
-          if(nhanViec) {
+          if(!check) {
+            for(let i=0; i<list_ca.length; i++) {
+              let day = list_ca[i].day;
+              day = day.join(" ");
+              let ca_lam = list_ca[i].ca_lam;
+              let gio_lam = list_ca[i].gio_lam;
+
+              let idMax = await functions.getMaxIdByField(UngTuyen, 'id_ungtuyen');
+              let nhanViec = new UngTuyen({
+                id_ungtuyen: idMax,
+                id_uv: userId,
+                id_ntd: viecLam.id_ntd,
+                id_viec: id_viec,
+                ca_lam: ca_lam,
+                gio_lam: gio_lam,
+                day: day,
+                ghi_chu: "",
+                status: 1,
+                created_at: Date.now(),
+              });
+              nhanViec = await nhanViec.save();
+            }
             //them thong tin vao model thong bao
             let maxIdTb = await functions.getMaxIdByField(ThongBaoNtd, 'tb_id');
             let uv_name = ungVien.userName? ungVien.userName: "";
@@ -481,7 +478,7 @@ exports.nhanViec = async(req, res, next) => {
             await vltgService.sendEmailNtd(ntd, ungVien, viecLam);
             return functions.success(res, "Ung tuyen viec lam thanh cong!");
           }
-          return functions.setError(res, "Ung tuyen viec lam fail", 407);
+          return functions.setError(res, "Ung tuyen da ung tuyen viec lam", 400);
         }
         return functions.setError(res, "Nha tuyen dung or Ung vien khong ton tai!", 406);
       }
@@ -602,7 +599,40 @@ exports.getInfoCandidate = async(req, res, next) => {
       let time_created = uv.createdAt;
       if(!time_created) time_created = functions.convertTimestamp(Date.now());
       uv.linkAvatar = vltgService.getLinkFile(folder_img, time_created, uv.avatarUser);
-      return functions.success(res, "lay ra thong tin thanh cong!", {data: uv});
+
+      //thong tin cong viec mong muon
+      let uvCvmm = await UvCvmm.findOne({id_uv_cvmm: id_uv}).lean();
+      if(uvCvmm) {
+        let job = await JobCategory.find({}, {jc_id: 1, jc_name: 1});
+        let city = await City2.find({cit_parent: 0}, {cit_id: 1, cit_name: 1});
+        let nganh_nghe = uvCvmm.nganh_nghe;
+        let dia_diem = uvCvmm.dia_diem;
+
+        let name_job = [];
+        let name_city = [];
+        if(nganh_nghe) {
+          nganh_nghe = nganh_nghe.split(", ");
+          for(let i=0; i<nganh_nghe.length; i++) {
+            let nn = job.filter((e) => e.jc_id == nganh_nghe[i]);
+            if(nn && nn.length>0) {
+              name_job.push(nn[0]);
+            }
+          }
+        }
+        uvCvmm.name_job = name_job;
+        if(dia_diem) {
+          dia_diem = dia_diem.split(", ");
+          for(let i=0; i<dia_diem.length; i++) {
+            let dd = city.filter((e) => e.cit_id == dia_diem[i]);
+            if(dd && dd.length>0) {
+              name_city.push(dd[0]);
+            }
+          }
+        }
+        uvCvmm.name_job = name_job;
+        uvCvmm.name_city = name_city;
+      }
+      return functions.success(res, "lay ra thong tin thanh cong!", {data: uv, uvCvmm: uvCvmm});
     }
     return functions.setError(res, "Ung vien not found!", 404);
   }catch(error) {
@@ -613,8 +643,10 @@ exports.getInfoCandidate = async(req, res, next) => {
 exports.updateInfoCandidate = async(req, res, next) => {
   try{
     let id_uv = req.user.data.idTimViec365;
-    let {userName, phone, city, district, address, birthday, gender, married} = req.body;
-    if(userName && phone && city && district && address && birthday && gender && married) {
+    let {userName, phone, city, email, district, address, birthday, gender, married} = req.body;
+    if(userName && phone && city && email && district && address && birthday) {
+      if(!gender) gender = 0;
+      if(!married) married = 0;
       let checkPhone = functions.checkPhoneNumber(phone);
       let checkDate = functions.checkDate(birthday);
       if(checkPhone && checkDate) {
@@ -623,6 +655,7 @@ exports.updateInfoCandidate = async(req, res, next) => {
         let ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {
           userName: userName,
           phone: phone,
+          email: email,
           city: city,
           district: district,
           address: address,

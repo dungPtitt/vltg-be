@@ -76,8 +76,8 @@ exports.quanLyChung = async(req, res, next) => {
       let viecLamMoiNhat = await ViecLam.find({id_ntd: id_ntd}, {id_vieclam: 1, vi_tri: 1, alias: 1, fist_time: 1, last_time: 1, time_td: 1}).sort({id_vieclam: -1}).skip(skip).limit(pageSize).lean();
 
       for(let i=0; i<viecLamMoiNhat.length; i++) {
-        let totalUnnTuyen = await functions.findCount(UngTuyen, {id_viec: viecLamMoiNhat[i].id_vieclam});
-        viecLamMoiNhat[i].totalUnnTuyen = totalUnnTuyen;
+        let totalUnnTuyen = await UngTuyen.distinct('id_viec', {id_viec: viecLamMoiNhat[i].id_vieclam});
+        viecLamMoiNhat[i].totalUnnTuyen = totalUnnTuyen.length;
       }
       let viecLam = await ViecLam.find({id_ntd: id_ntd});
       for(let i=0; i<viecLam.length; i++) {
@@ -87,12 +87,14 @@ exports.quanLyChung = async(req, res, next) => {
         if(((today-viecLam[i].last_time) < 172800) && ((today-viecLam[i].last_time) > 0)) count_vlshh++; 
 
         //lay ra luot ung tuyen
-        let luotUngTuyen = await functions.findCount(UngTuyen, {id_viec: viecLam[i].id_vieclam});
-        viecLam[i].luotUngTuyen = luotUngTuyen;
+        let luotUngTuyen = await UngTuyen.distinct('id_viec', {id_viec: viecLam[i].id_vieclam});
+        viecLam[i].luotUngTuyen = luotUngTuyen.length;
       }
       //ung vien ung tuyen moi nhat
       let hoSoUngTuyen = await UngTuyen.aggregate([
         {$match: {id_ntd: id_ntd}},
+        { $group: { _id: '$id_viec', firstUngTuyen: { $first: '$$ROOT' } } },
+        { $replaceRoot: { newRoot: '$firstUngTuyen' } },
         {$sort: {id_ungtuyen: -1}},
         {$limit: 4},
         {
@@ -119,7 +121,9 @@ exports.quanLyChung = async(req, res, next) => {
         {
           $project: {
               "id_ungtuyen": "$id_ungtuyen",
+              "uv_id": "$UngVien.idTimViec365",
               "uv_name": "$UngVien.userName",
+              "vl_id": "$ViecLam.id_vieclam",
               "vl_vitri": "$ViecLam.vi_tri",
               "vl_alias": "$ViecLam.alias",
               "created_at": "$created_at",
@@ -129,7 +133,8 @@ exports.quanLyChung = async(req, res, next) => {
       let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1}, {"inforVLTG.diem_free": 1});
       let diem_free = 0;
       if(ntd) diem_free = (ntd.inforVLTG && ntd.inforVLTG.diem_free) ? ntd.inforVLTG.diem_free: 0;
-      let totalHoSoUngTuyen = await functions.findCount(UngTuyen, {id_ntd: id_ntd});
+      let totalHoSoUngTuyen = await UngTuyen.distinct('id_viec', {id_ntd: id_ntd});
+      totalHoSoUngTuyen = totalHoSoUngTuyen.length;
       let totalLocDiem = await functions.findCount(NtdXemUv, {id_ntd: id_ntd});
       let info = {
         totalHoSoUngTuyen: totalHoSoUngTuyen,
@@ -627,47 +632,22 @@ exports.dangTin = async(req, res, next) => {
               //
               viecLam = await viecLam.save();
               //them vao model ca lam viec
-              let {ca1_fist, ca1_last, day1, ca2_fist, ca2_last, day2, ca3_fist, ca3_last, day3, ca4_fist, ca4_last, day4, ca5_fist, ca5_last, day5} = req.body;
-              if(ca1_fist && ca1_last && day1) {
-                day1 = day1.join(", 1");
-                day1 = "1"+day1;
-                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca1_fist , ca_end_time: ca1_last, day: day1});
-                await caLamViec.save();
+              let list_ca = req.body.list_ca;
+              // ca_fist, ca_last, day
+              if(list_ca && list_ca.length>0) {
+                for(let i=0; i<list_ca.length; i++) {
+                  let day = list_ca[i].day;
+                  let ca_fist = list_ca[i].ca_fist;
+                  let ca_last = list_ca[i].ca_last;
+                  day = day.join(`, ${i+1}`);
+                  day = `${i+1}${day}`;
+                  let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
+                  let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca_fist , ca_end_time: ca_last, day: day});
+                  await caLamViec.save();
+                }
+                return functions.success(res, "Dang tin thnh cong!");
               }
-              //ca2
-              if(ca2_fist && ca2_last && day2) {
-                day2 = day2.join(", 2");
-                day2 = "2"+day2;
-                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca2_fist , ca_end_time: ca2_last, day: day2});
-                await caLamViec.save();
-              }
-              //ca3
-              if(ca3_fist && ca3_last && day3) {
-                day3 = day3.join(", 3");
-                day3 = "3"+day3;
-                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca3_fist , ca_end_time: ca3_last, day: day3});
-                await caLamViec.save();
-              }
-              //ca4
-              if(ca4_fist && ca4_last && day4) {
-                day4 = day4.join(", 4");
-                day4 = "4"+day4;
-                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca4_fist , ca_end_time: ca4_last, day: day4});
-                await caLamViec.save();
-              }
-              //ca5
-              if(ca5_fist && ca5_last && day5) {
-                day5 = day5.join(", 5");
-                day5 = "5"+day5;
-                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca5_fist , ca_end_time: ca5_last, day: day5});
-                await caLamViec.save();
-              }
-              return functions.success(res, "Dang tin thnh cong!");
+              return functions.setError(res, "Missing input value list_ca!", 400);
             }
             return functions.setError(res, "Invalid phone", 406);
           }
@@ -702,8 +682,8 @@ exports.danhSachTinDaDang = async(req, res, next) => {
       let jc_id = Number(danhSachViecLam[i].nganh_nghe);
       let nganhNghe = await JobCategory.findOne({jc_id: jc_id}, {jc_id: 1, jc_name: 1});
       if(nganhNghe) danhSachViecLam[i].nganhNghe = nganhNghe;
-      let totalUngTuyen = await functions.findCount(UngTuyen, {id_viec: danhSachViecLam[i].id_vieclam});
-      danhSachViecLam[i].totalUngTuyen = totalUngTuyen;
+      let totalUngTuyen = await UngTuyen.distinct("id_viec", {id_viec: danhSachViecLam[i].id_vieclam});
+      danhSachViecLam[i].totalUngTuyen = totalUngTuyen.length;
     }
     return functions.success(res, "danh sach tin da dang", {total, data: danhSachViecLam});
   }catch(error) {
@@ -751,47 +731,23 @@ exports.suaTin = async(req, res, next) => {
 
             //them vao model ca lam viec
             let caLamViec = await CaLamViec.deleteMany({ca_id_viec: id_vieclam});
-            let {ca1_fist, ca1_last, day1, ca2_fist, ca2_last, day2, ca3_fist, ca3_last, day3, ca4_fist, ca4_last, day4, ca5_fist, ca5_last, day5} = req.body;
-            if(ca1_fist && ca1_last && day1) {
-              day1 = day1.join(", 1");
-              day1 = "1"+day1;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca1_fist , ca_end_time: ca1_last, day: day1});
-              await caLamViec.save();
+
+            //them vao model ca lam viec
+            let list_ca = req.body.list_ca;
+            if(list_ca && list_ca.length>0) {
+              for(let i=0; i<list_ca.length; i++) {
+                let day = list_ca[i].day;
+                let ca_fist = list_ca[i].ca_fist;
+                let ca_last = list_ca[i].ca_last;
+                day = day.join(`, ${i+1}`);
+                day = `${i+1}${day}`;
+                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
+                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca_fist , ca_end_time: ca_last, day: day});
+                await caLamViec.save();
+              }
+              return functions.success(res, "Sua tin thnh cong!");
             }
-            //ca2
-            if(ca2_fist && ca2_last && day2) {
-              day2 = day2.join(", 2");
-              day2 = "2"+day2;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca2_fist , ca_end_time: ca2_last, day: day2});
-              await caLamViec.save();
-            }
-            //ca3
-            if(ca3_fist && ca3_last && day3) {
-              day3 = day3.join(", 3");
-              day3 = "3"+day3;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca3_fist , ca_end_time: ca3_last, day: day3});
-              await caLamViec.save();
-            }
-            //ca4
-            if(ca4_fist && ca4_last && day4) {
-              day4 = day4.join(", 4");
-              day4 = "4"+day4;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca4_fist , ca_end_time: ca4_last, day: day4});
-              await caLamViec.save();
-            }
-            //ca5
-            if(ca5_fist && ca5_last && day5) {
-              day5 = day5.join(", 5");
-              day5 = "5"+day5;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca5_fist , ca_end_time: ca5_last, day: day5});
-              await caLamViec.save();
-            }
-            return functions.success(res, "Sua tin thnh cong!");
+            return functions.setError(res, "Missing input value list_ca!", 400);
           }
           return functions.setError(res, "Invalid phone", 406);
         }
@@ -832,25 +788,26 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
     const skip = (page-1)*pageSize;
     let id_ntd = req.user.data.idTimViec365;
     let condition = {id_ntd: id_ntd};
-    if(status) condition.status = Number(status); 
-    let ungVienMoiUngTuyen = await UngTuyen.aggregate([
+    let condition2 = {UngVien: {$ne: []}};
+    let condition3 = {id_ntd: id_ntd};
+    if(status) {
+      condition2["UngTuyen.status"] = Number(status);
+      condition3.status = Number(status);
+    }
+    let ungVienMoiUngTuyen = await ViecLam.aggregate([
       {$match: condition},
-      {$sort: {id_ungtuyen: -1}},
-      {$skip: skip},
-      {$limit: pageSize},
       {
         $lookup: {
-            from: "VLTG_ViecLam",
-            localField: "id_viec",
-            foreignField: "id_vieclam",
-            as: "ViecLam"
+            from: "VLTG_UngTuyen",
+            localField: "id_vieclam",
+            foreignField: "id_viec",
+            as: "UngTuyen"
         }
       },
-      {$unwind: { path: "$ViecLam", preserveNullAndEmptyArrays: true }},
       {
         $lookup: {
             from: "Users",
-            localField: "id_uv",
+            localField: "UngTuyen.id_uv",
             foreignField: "idTimViec365",
             pipeline: [
                 { $match: { idTimViec365: { $nin: [0, null] }, type: 0} },
@@ -858,29 +815,27 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
             as: "UngVien"
         }
       },
+      {$match: condition2},
       {$unwind: { path: "$UngVien", preserveNullAndEmptyArrays: true }},
       {
         $project: {
-          "id_ungtuyen": "$id_ungtuyen",
-          "id_uv": "$id_uv",
-          "id_ntd": "$id_ntd",
-          "id_viec": "$id_viec",
-          "ca_lam": "$ca_lam",
-          "gio_lam": "$gio_lam",
-          "day": "$day",
-          "ghi_chu": "$ghi_chu",
-          "status": "$status",
-          "created_at": "$created_at",
+          "uv_id": "$UngVien.idTimViec365",
           "uv_userName": "$UngVien.userName",
           "uv_phone": "$UngVien.phone",
           "uv_city": "$UngVien.city",
           "uv_address": "$UngVien.address",
-          "vl_vitri": "$ViecLam.vi_tri",
-          "vl_alias": "$ViecLam.alias",
+          "id_vieclam": "$id_vieclam",
+          "vl_vitri": "$vi_tri",
+          "vl_alias": "$alias",
+          "UngTuyen": "$UngTuyen",
         }
-      }
+      },
+      {$sort: {"UngTuyen.id_ungtuyen": -1}},
+      {$skip: skip},
+      {$limit: pageSize},
     ]);
-    let total = await functions.findCount(UngTuyen, condition);
+    let total = await UngTuyen.distinct('id_viec', condition3);
+    total = total.length;
     return functions.success(res, "danh sach ung vien moi ung tuyen", {total, data: ungVienMoiUngTuyen});
   }catch(error) {
     return functions.setError(res, error.message);
@@ -889,11 +844,13 @@ exports.ungVienMoiUngTuyen = async(req, res, next) => {
 
 exports.updateStatusUngTuyen = async(req, res, next) => {
   try{
-    let {id_ungtuyen, status} = req.body;
-    if(id_ungtuyen) {
-      id_ungtuyen = Number(id_ungtuyen);
-      let ungTuyen = await UngTuyen.findOneAndUpdate({id_ungtuyen: id_ungtuyen}, {status: status});
-      if(ungTuyen) {
+    let {id_viec, id_uv, status} = req.body;
+    let id_ntd = req.user.data.idTimViec365;
+    if(id_viec && id_uv) {
+      id_viec = Number(id_viec);
+      id_uv = Number(id_uv);
+      let ungTuyen = await UngTuyen.updateMany({id_viec: id_viec, id_uv: id_uv, id_ntd: id_ntd}, {status: status});
+      if(ungTuyen && ungTuyen.matchedCount>0) {
         return functions.success(res, "Update status ung tuyen thanh cong");
       }
       return functions.setError(res, "Ung tuyen not found!", 404);
@@ -906,11 +863,13 @@ exports.updateStatusUngTuyen = async(req, res, next) => {
 
 exports.updateGhiChuUngTuyen = async(req, res, next) => {
   try{
-    let {id_ungtuyen, ghi_chu} = req.body;
-    if(id_ungtuyen) {
-      id_ungtuyen = Number(id_ungtuyen);
-      let ungTuyen = await UngTuyen.findOneAndUpdate({id_ungtuyen: id_ungtuyen}, {ghi_chu: ghi_chu});
-      if(ungTuyen) {
+    let {id_viec, id_uv, ghi_chu} = req.body;
+    let id_ntd = req.user.data.idTimViec365;
+    if(id_viec && id_uv) {
+      id_viec = Number(id_viec);
+      id_uv = Number(id_uv);
+      let ungTuyen = await UngTuyen.updateMany({id_viec: id_viec, id_uv: id_uv, id_ntd: id_ntd}, {ghi_chu: ghi_chu});
+      if(ungTuyen && ungTuyen.matchedCount>0) {
         return functions.success(res, "Update chi chu ung tuyen thanh cong");
       }
       return functions.setError(res, "Ung tuyen not found!", 404);
@@ -933,7 +892,7 @@ exports.ungVienTuDiemLoc = async(req, res, next) => {
     let id_ntd = req.user.data.idTimViec365;
     let condition = {id_ntd: id_ntd};
     if(ket_qua) condition.ket_qua = Number(ket_qua); 
-    let ungVienMoiUngTuyen = await NtdXemUv.aggregate([
+    let ungVienTuDiemLoc = await NtdXemUv.aggregate([
       {$match: condition},
       {$sort: {stt: -1}},
       {$skip: skip},
@@ -967,7 +926,7 @@ exports.ungVienTuDiemLoc = async(req, res, next) => {
       }
     ]);
     let total = await functions.findCount(NtdXemUv, condition);
-    return functions.success(res, "danh sach ung vien moi ung tuyen", {total, data: ungVienMoiUngTuyen});
+    return functions.success(res, "danh sach ung vien moi ung tuyen", {total, data: ungVienTuDiemLoc});
   }catch(error) {
     return functions.setError(res, error.message);
   }
