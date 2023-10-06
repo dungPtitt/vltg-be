@@ -102,7 +102,7 @@ exports.updateCongViecMongMuon = async(req, res, next) => {
   try{
     let userId = req.user.data.idTimViec365;
     let {cong_viec, nganh_nghe, dia_diem, cap_bac, hinh_thuc, luong} = req.body;
-    if(cong_viec && nganh_nghe && dia_diem && cap_bac && hinh_thuc && luong && dia_diem.length>0 && nganh_nghe.length>0) {
+    if(cong_viec && nganh_nghe && dia_diem && luong && dia_diem.length>0 && nganh_nghe.length>0) {
       let time = functions.convertTimestamp(Date.now());
       let user = await Users.findOneAndUpdate({idTimViec365: userId, type: 0}, {updatedAt: time}, {new: true});
       if(user) {
@@ -717,6 +717,72 @@ exports.updateStatusSearch = async(req, res, next) => {
       return functions.success(res, "update status search candidate success!");
     }
     return functions.setError(res, "Nha tuyen dung khong ton tai!", 400);
+  }catch(error) {
+    return functions.setError(res, error.message);
+  }
+}
+
+exports.updateInfo = async(req, res, next) => {
+  try{
+    let id_uv = req.user.data.idTimViec365;
+    let {email, gender, birthday, city, district, cong_viec, dia_diem, nganh_nghe, day} = req.body;
+    if(email && city && district && cong_viec && dia_diem && nganh_nghe && day) {
+      if(!gender) gender = 0;
+      let checkEmail = functions.checkEmail(email);
+      let checkDate = functions.checkDate(birthday);
+      if(checkEmail && checkDate) {
+        let checkEmailExist = await Users.findOne({email: email, idTimViec365: {$ne: id_uv}});
+        if(!checkEmailExist) {
+          birthday = functions.convertTimestamp(birthday);
+          let time = functions.convertTimestamp(Date.now());
+
+          day = day.join(", ");
+          let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0});
+          if(!ungVien.inForPerson) {
+            ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {
+              email: email,
+              city: city,
+              district: district,
+              updatedAt: time,
+              inForPerson: {
+                account: {
+                  gender: gender,
+                  birthday: birthday,
+                }
+              },
+              "inforVLTG.uv_day": day,
+            }, {new: true});
+          }else {
+            ungVien = await Users.findOneAndUpdate({idTimViec365: id_uv, type: 0}, {
+              email: email,
+              city: city,
+              district: district,
+              updatedAt: time,
+              "inForPerson.account.gender": gender,
+              "inForPerson.account.birthday": birthday,
+              "inforVLTG.uv_day": day,
+            }, {new: true});
+          }
+          if(ungVien) {
+            nganh_nghe = nganh_nghe.join(", ");
+            dia_diem = dia_diem.join(", ");
+            let uvCvmm = await UvCvmm.findOneAndUpdate({id_uv_cvmm: id_uv}, {
+              cong_viec: cong_viec,
+              nganh_nghe: nganh_nghe,
+              dia_diem: dia_diem,
+            }, {new: true, upsert: true});
+            if(uvCvmm) {
+              return functions.success(res, "Cap nhat thong tin thanh cong!");
+            }
+            return functions.setError(res, "cvmm not found!", 404);
+          }
+          return functions.setError(res, "Ung vien not found!", 404);
+        }
+        return functions.setError(res, "Email da ton tai", 404);
+      }
+      return functions.setError(res, "Invalid phone number or invalid date!", 400);
+    }
+    return functions.setError(res, "Missing input value!", 400);
   }catch(error) {
     return functions.setError(res, error.message);
   }

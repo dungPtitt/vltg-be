@@ -394,16 +394,9 @@ exports.thongKeViecLam = async(req, res, next) => {
     let totaTinhThanh = [];
     let tinhThanh = await City2.find({cit_parent: 0}, {cit_id: 1, cit_name: 1}).sort({cit_id: 1}).lean();
     for(let i=0; i<tinhThanh.length; i++) {
-      let total = listJob.filter((e) => {
-        if(e.dia_diem) {
-          let arr_dd = e.dia_diem.split(", ");
-          let check = arr_dd.includes(String(tinhThanh[i].cit_id));
-          if(check) return true;
-        }
-        return false;
-      });
-      if(total.length < 1) continue;
-      tinhThanh[i].total = total.length;
+      let total = listJob.filter((e) => e.dia_diem == tinhThanh[i].cit_id).length;
+      if(total < 1) continue;
+      tinhThanh[i].total = total;
       totaTinhThanh.push(tinhThanh[i]);
     }
     return functions.success(res, "Thong ke viec lam theo hinh thuc, nganh nghe, tinh thanh", {totalHinhThuc, totaNganhNghe: nganhNghe, totaTinhThanh});

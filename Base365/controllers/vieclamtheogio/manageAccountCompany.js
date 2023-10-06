@@ -522,6 +522,7 @@ exports.chiTietUngVien = async(req, res, next) => {
           }
         }
         ungVien.arrNameNN = arrNameNN;
+        ungVien.linkAvatar = vltgService.getLinkFile('user_uv', ungVien.createdAt, ungVien.avatarUser);
 
         //lay ra danh sach ung vien lien quan
         let condition = {idTimViec365: {$nin: [null, 0, id_uv]}, type: 0};
@@ -619,6 +620,7 @@ exports.dangTin = async(req, res, next) => {
             if(functions.checkPhoneNumber(phone_lh)) {
               alias = functions.renderAlias(vi_tri);
               time_td = functions.convertTimestamp(time_td);
+              if(time_td < time) return functions.setError(res, "time_td must >= time now", 400);
               let muc_luong;
               if(ht_luong == 1) {
                 muc_luong = luong;
@@ -1217,32 +1219,36 @@ exports.ntdSaveUv = async(req, res, next) => {
       let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
       let ungVien = await Users.findOne({idTimViec365: id_uv, type: 0});
       if(ntd && ungVien) {
-        let maxId = await functions.getMaxIdByField(NtdSaveUv, 'id');
-        let ntdSaveUv = new NtdSaveUv({
-          id: maxId,
-          id_ntd: id_ntd,
-          id_uv: id_uv,
-          created_at: Date.now()
-        });
-        ntdSaveUv = await ntdSaveUv.save();
-        if(ntdSaveUv) {
-          //them vao model thong bao
-          let maxIdTb = await functions.getMaxIdByField(ThongBaoUv, 'tb_id');
-          let ntd_name = ntd.userName? ntd.userName: "";
-          let ntd_avatar = ntd.avatarUser? ntd.avatarUser: "";
-          let time = functions.convertTimestamp(Date.now());
-          let thongBao = new ThongBaoUv({
-            tb_id: maxIdTb,
-            tb_uv: id_uv,
-            tb_ntd: id_ntd,
-            tb_name: ntd_name,
-            tb_avatar: ntd_avatar,
-            created_at: time
+        let check_save = await NtdSaveUv.findOne({id_ntd: id_ntd, id_uv: id_uv});
+        if(!check_save) {
+          let maxId = await functions.getMaxIdByField(NtdSaveUv, 'id');
+          let ntdSaveUv = new NtdSaveUv({
+            id: maxId,
+            id_ntd: id_ntd,
+            id_uv: id_uv,
+            created_at: Date.now()
           });
-          await thongBao.save();
-          return functions.success(res, "Nha tuyen dung luu ung vien thanh cong!");
+          ntdSaveUv = await ntdSaveUv.save();
+          if(ntdSaveUv) {
+            //them vao model thong bao
+            let maxIdTb = await functions.getMaxIdByField(ThongBaoUv, 'tb_id');
+            let ntd_name = ntd.userName? ntd.userName: "";
+            let ntd_avatar = ntd.avatarUser? ntd.avatarUser: "";
+            let time = functions.convertTimestamp(Date.now());
+            let thongBao = new ThongBaoUv({
+              tb_id: maxIdTb,
+              tb_uv: id_uv,
+              tb_ntd: id_ntd,
+              tb_name: ntd_name,
+              tb_avatar: ntd_avatar,
+              created_at: time
+            });
+            await thongBao.save();
+            return functions.success(res, "Nha tuyen dung luu ung vien thanh cong!");
+          }
+          return functions.setError(res, "Ntd luu ung vien that bai", 405);
         }
-        return functions.setError(res, "Ntd luu ung vien that bai", 405);
+        return functions.setError(res, "Ung vien da duoc luu!", 400);
       }
       return functions.setError(res, "Nha tuyen dung or Ung vien khong ton tai", 404);
     }
