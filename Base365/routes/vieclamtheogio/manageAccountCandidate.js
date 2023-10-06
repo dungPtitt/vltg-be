@@ -41,4 +41,6 @@ router.post('/updateInfoCandidate', functions.checkToken, vltgService.checkCandi
 router.post('/updateAvatarCandidate', functions.checkToken, vltgService.checkCandidate, formData.parse(), manageAccountCandidate.updateAvatarCandidate);
 router.post('/updateStatusSearch', functions.checkToken, vltgService.checkCandidate, formData.parse(), manageAccountCandidate.updateStatusSearch);
 
+router.post('/updateInfo', functions.checkToken, vltgService.checkCandidate, formData.parse(), manageAccountCandidate.updateInfo);
+
 module.exports = router;

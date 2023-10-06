@@ -37,6 +37,7 @@ exports.loginAdmin = async(req, res, next) => {
             lang_id: updateAdmin.lang_id,
             adm_all_category: updateAdmin.adm_all_category,
             adm_edit_all: updateAdmin.adm_edit_all,
+            adm_active: updateAdmin.adm_active,
           }
           const token = await functions.createToken(data, "1d");
           return functions.success(res, 'Đăng nhập thành công', { token: token })
@@ -183,7 +184,7 @@ exports.danhSachUngVienAndNtd = async(req, res, next) => {
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page-1)*pageSize;
-    let condition = {idTimViec365: {$nin: [null, 0]}, inforVLTG: {$ne: null}};
+    let condition = {idTimViec365: {$nin: [null, 0]}};
 
     //phan biet danh sach nha tuyen dung <> ung vien
     //tk ung vien
@@ -252,7 +253,7 @@ exports.danhSachUngVienAndNtd = async(req, res, next) => {
     }
     const total = await functions.findCount(Users, condition);
 
-    return functions.success(res, "Thong ke danh sach ung vien theo hinh thuc, nganh nghe, tinh thanh", {total, data: danhSachUngVien});
+    return functions.success(res, "Thong ke danh sach ntd", {total, data: danhSachUngVien});
   }catch(error) {
     return functions.setError(res, error.message);
   }
@@ -265,53 +266,57 @@ exports.createUngVien = async(req, res, next) => {
       let checkPhone = functions.checkPhoneNumber(phone);
       let checkEmail = functions.checkEmail(email);
       if(checkPhone && checkEmail) {
-        let time_created = functions.convertTimestamp(Date.now());
-        let avatar = (req.files && req.files.avatar)? req.files.avatar: null;
-        let nameAvatar = "";
-        if(avatar) {
-          let checkAvatar = await vltgService.checkFile(avatar.path);
-          if(checkAvatar) {
-            nameAvatar = await vltgService.uploadFileNameRandom(folder_img_uv, time_created, avatar);
-          }else {
-            return functions.setError(res, "Invalid image", 400);
+        let checkEmailExist = await Users.findOne({email: email});
+        if(!checkEmailExist) {
+          let time_created = functions.convertTimestamp(Date.now());
+          let avatar = (req.files && req.files.avatar)? req.files.avatar: null;
+          let nameAvatar = "";
+          if(avatar) {
+            let checkAvatar = await vltgService.checkFile(avatar.path);
+            if(checkAvatar) {
+              nameAvatar = await vltgService.uploadFileNameRandom(folder_img_uv, time_created, avatar);
+            }else {
+              return functions.setError(res, "Invalid image", 400);
+            }
           }
-        }
-        day = day.join(", ");
-        uv_nganhnghe = uv_nganhnghe.join(", ");
-        uv_diadiem = uv_diadiem.join(", ");
-        let alias = functions.renderAlias(userName);
-        const maxIdVLTG = await functions.getMaxIdByField(Users, 'idTimViec365');
-        const max_id = await functions.getMaxIdByField(Users, '_id');
-        let user = new Users({
-          _id: max_id,
-          idTimViec365: maxIdVLTG,
-          type: 0,
-          userName: userName,
-          alias: alias,
-          phone: phone,
-          email: email,
-          password: md5(password),
-          city: city,
-          district: district,
-          address: address,
-          avatarUser: nameAvatar,
-          createdAt: time_created,
-          updatedAt: time_created,
-          "inforVLTG.uv_day": day,
-          "inforVLTG.uv_active": 1,
-        });
-        user = await user.save();
-        if(user) {
-          let cvmm = new UvCvmm({
-            id_uv_cvmm: maxIdVLTG,
-            cong_viec: uv_congviec,
-            nganh_nghe: uv_nganhnghe,
-            dia_diem: uv_diadiem
+          day = day.join(", ");
+          uv_nganhnghe = uv_nganhnghe.join(", ");
+          uv_diadiem = uv_diadiem.join(", ");
+          let alias = functions.renderAlias(userName);
+          const maxIdVLTG = await functions.getMaxIdByField(Users, 'idTimViec365');
+          const max_id = await functions.getMaxIdByField(Users, '_id');
+          let user = new Users({
+            _id: max_id,
+            idTimViec365: maxIdVLTG,
+            type: 0,
+            userName: userName,
+            alias: alias,
+            phone: phone,
+            email: email,
+            password: md5(password),
+            city: city,
+            district: district,
+            address: address,
+            avatarUser: nameAvatar,
+            createdAt: time_created,
+            updatedAt: time_created,
+            "inforVLTG.uv_day": day,
+            "inforVLTG.uv_active": 1,
           });
-          await cvmm.save();
-          return functions.success(res, "Create ung vien sucess!");
+          user = await user.save();
+          if(user) {
+            let cvmm = new UvCvmm({
+              id_uv_cvmm: maxIdVLTG,
+              cong_viec: uv_congviec,
+              nganh_nghe: uv_nganhnghe,
+              dia_diem: uv_diadiem
+            });
+            await cvmm.save();
+            return functions.success(res, "Create ung vien sucess!");
+          }
+          return functions.setError(res, "Create ung vien fail!");
         }
-        return functions.setError(res, "Create ung vien fail!");
+        return functions.setError(res, "Email da ton tai!");
       }
       return functions.setError(res, "phone or email invalid", 401);
     }
@@ -406,42 +411,46 @@ exports.createCompany = async(req, res, next) => {
       let checkPhone = functions.checkPhoneNumber(phone);
       let checkEmail = functions.checkEmail(email);
       if(checkPhone && checkEmail) {
-        let time_created = functions.convertTimestamp(Date.now());
-        let avatar = (req.files && req.files.avatar)? req.files.avatar: null;
-        let nameAvatar = "";
-        if(avatar) {
-          let checkAvatar = await vltgService.checkFile(avatar.path);
-          if(checkAvatar) {
-            nameAvatar = await vltgService.uploadFileNameRandom(folder_img_uv, time_created, avatar);
-          }else {
-            return functions.setError(res, "Invalid image", 400);
+        let checkEmailExist = await Users.findOne({email: email});
+        if(!checkEmailExist) {
+          let time_created = functions.convertTimestamp(Date.now());
+          let avatar = (req.files && req.files.avatar)? req.files.avatar: null;
+          let nameAvatar = "";
+          if(avatar) {
+            let checkAvatar = await vltgService.checkFile(avatar.path);
+            if(checkAvatar) {
+              nameAvatar = await vltgService.uploadFileNameRandom(folder_img_uv, time_created, avatar);
+            }else {
+              return functions.setError(res, "Invalid image", 400);
+            }
           }
+          let alias = functions.renderAlias(userName);
+          const maxIdVLTG = await functions.getMaxIdByField(Users, 'idTimViec365');
+          const max_id = await functions.getMaxIdByField(Users, '_id');
+          let user = new Users({
+            _id: max_id,
+            idTimViec365: maxIdVLTG,
+            type: 1,
+            userName: userName,
+            alias: alias,
+            phone: phone,
+            email: email,
+            password: md5(password),
+            city: city,
+            district: district,
+            address: address,
+            avatarUser: nameAvatar,
+            createdAt: time_created,
+            updatedAt: time_created,
+            "inforVLTG.ntd_active": 1,
+          });
+          user = await user.save();
+          if(user) {
+            return functions.success(res, "Create nha tuyen dung sucess!");
+          }
+          return functions.setError(res, "Create nha tuyen dung fail!");
         }
-        let alias = functions.renderAlias(userName);
-        const maxIdVLTG = await functions.getMaxIdByField(Users, 'idTimViec365');
-        const max_id = await functions.getMaxIdByField(Users, '_id');
-        let user = new Users({
-          _id: max_id,
-          idTimViec365: maxIdVLTG,
-          type: 1,
-          userName: userName,
-          alias: alias,
-          phone: phone,
-          email: email,
-          password: md5(password),
-          city: city,
-          district: district,
-          address: address,
-          avatarUser: nameAvatar,
-          createdAt: time_created,
-          updatedAt: time_created,
-          "inforVLTG.ntd_active": 1,
-        });
-        user = await user.save();
-        if(user) {
-          return functions.success(res, "Create nha tuyen dung sucess!");
-        }
-        return functions.setError(res, "Create nha tuyen dung fail!");
+        return functions.setError(res, "Email da ton tai");
       }
       return functions.setError(res, "phone or email invalid", 401);
     }
@@ -657,50 +666,24 @@ exports.createTin = async(req, res, next) => {
 
             let viecLam = new ViecLam({ id_vieclam: maxId, id_ntd: id_ntd, vi_tri, nganh_nghe, dia_diem, quan_huyen, cap_bac, hinh_thuc, ht_luong, tra_luong, muc_luong, thoi_gian, hoa_hong, so_luong, hoc_van, time_td, fist_time, last_time, alias, mo_ta, gender, yeu_cau, quyen_loi, ho_so,
               luot_xem: 0, name_lh, phone_lh, address_lh, email_lh, vl_created_time: time,active: 0, created_at: time,});
-            //
-            viecLam = await viecLam.save();
             //them vao model ca lam viec
-            let {ca1_fist, ca1_last, day1, ca2_fist, ca2_last, day2, ca3_fist, ca3_last, day3, ca4_fist, ca4_last, day4, ca5_fist, ca5_last, day5} = req.body;
-            if(ca1_fist && ca1_last && day1) {
-              day1 = day1.join(", 1");
-              day1 = "1"+day1;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca1_fist , ca_end_time: ca1_last, day: day1});
-              await caLamViec.save();
+            let list_ca = req.body.list_ca;
+            
+            if(list_ca && list_ca.length>0) {
+              for(let i=0; i<list_ca.length; i++) {
+                let day = list_ca[i].day;
+                let ca_fist = list_ca[i].ca_fist;
+                let ca_last = list_ca[i].ca_last;
+                day = day.join(`, ${i+1}`);
+                day = `${i+1}${day}`;
+                let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
+                let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca_fist , ca_end_time: ca_last, day: day});
+                await caLamViec.save();
+              }
+              viecLam = await viecLam.save();
+              return functions.success(res, "Dang tin thnh cong!");
             }
-            //ca2
-            if(ca2_fist && ca2_last && day2) {
-              day2 = day2.join(", 2");
-              day2 = "2"+day2;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca2_fist , ca_end_time: ca2_last, day: day2});
-              await caLamViec.save();
-            }
-            //ca3
-            if(ca3_fist && ca3_last && day3) {
-              day3 = day3.join(", 3");
-              day3 = "3"+day3;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca3_fist , ca_end_time: ca3_last, day: day3});
-              await caLamViec.save();
-            }
-            //ca4
-            if(ca4_fist && ca4_last && day4) {
-              day4 = day4.join(", 4");
-              day4 = "4"+day4;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca4_fist , ca_end_time: ca4_last, day: day4});
-              await caLamViec.save();
-            }
-            //ca5
-            if(ca5_fist && ca5_last && day5) {
-              day5 = day5.join(", 5");
-              day5 = "5"+day5;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: maxId, ca_start_time: ca5_fist , ca_end_time: ca5_last, day: day5});
-              await caLamViec.save();
-            }
-            return functions.success(res, "Dang tin thnh cong!");
+            return functions.setError(res, "Missing input list_ca", 407);
           }
           return functions.setError(res, "Invalid phone", 406);
         }
@@ -748,51 +731,27 @@ exports.updateTin = async(req, res, next) => {
             let viecLam = await ViecLam.findOneAndUpdate({id_vieclam: id_vieclam} ,{id_ntd: id_ntd, vi_tri, nganh_nghe, dia_diem, quan_huyen, cap_bac, hinh_thuc, ht_luong, tra_luong, muc_luong, thoi_gian, hoa_hong, so_luong, hoc_van, time_td, fist_time, last_time, alias, mo_ta, gender, yeu_cau, quyen_loi, ho_so,
               name_lh, phone_lh, address_lh, email_lh}, {new: true});
             //
-            if(!viecLam) functions.setError(res, "Viec lam not found!", 404);
-
-            //them vao model ca lam viec
-            let caLamViec = await CaLamViec.deleteMany({ca_id_viec: id_vieclam});
-            let {ca1_fist, ca1_last, day1, ca2_fist, ca2_last, day2, ca3_fist, ca3_last, day3, ca4_fist, ca4_last, day4, ca5_fist, ca5_last, day5} = req.body;
-            if(ca1_fist && ca1_last && day1) {
-              day1 = day1.join(", 1");
-              day1 = "1"+day1;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca1_fist , ca_end_time: ca1_last, day: day1});
-              await caLamViec.save();
+            if(viecLam) {
+              let list_ca = req.body.list_ca;
+              if(list_ca && list_ca.length>0) {
+                //them vao model ca lam viec
+                await CaLamViec.deleteMany({ca_id_viec: id_vieclam});
+                
+                for(let i=0; i<list_ca.length; i++) {
+                  let day = list_ca[i].day;
+                  let ca_fist = list_ca[i].ca_fist;
+                  let ca_last = list_ca[i].ca_last;
+                  day = day.join(`, ${i+1}`);
+                  day = `${i+1}${day}`;
+                  let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
+                  let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca_fist , ca_end_time: ca_last, day: day});
+                  await caLamViec.save();
+                }
+                return functions.success(res, "Sua tin thnh cong!");
+              }
+              return functions.setError(res, "Missing input list_ca!", 400);
             }
-            //ca2
-            if(ca2_fist && ca2_last && day2) {
-              day2 = day2.join(", 2");
-              day2 = "2"+day2;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca2_fist , ca_end_time: ca2_last, day: day2});
-              await caLamViec.save();
-            }
-            //ca3
-            if(ca3_fist && ca3_last && day3) {
-              day3 = day3.join(", 3");
-              day3 = "3"+day3;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca3_fist , ca_end_time: ca3_last, day: day3});
-              await caLamViec.save();
-            }
-            //ca4
-            if(ca4_fist && ca4_last && day4) {
-              day4 = day4.join(", 4");
-              day4 = "4"+day4;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca4_fist , ca_end_time: ca4_last, day: day4});
-              await caLamViec.save();
-            }
-            //ca5
-            if(ca5_fist && ca5_last && day5) {
-              day5 = day5.join(", 5");
-              day5 = "5"+day5;
-              let maxIdCaLamViec = await functions.getMaxIdByField(CaLamViec, 'ca_id');
-              let caLamViec = new CaLamViec({ca_id: maxIdCaLamViec, ca_id_viec: id_vieclam, ca_start_time: ca5_fist , ca_end_time: ca5_last, day: day5});
-              await caLamViec.save();
-            }
-            return functions.success(res, "Sua tin thnh cong!");
+            return functions.setError(res, "Viec lam not found!", 404);
           }
           return functions.setError(res, "Invalid phone", 406);
         }
