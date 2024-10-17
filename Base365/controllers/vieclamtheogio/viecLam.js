@@ -13,6 +13,7 @@ const folder_img = "user_ntd";
 //danh sach nganh nghe
 exports.danhSachViecLam = async (req, res, next) => {
   try {
+    console.log("req.body", req.body);
     let { page, pageSize, key, city, district, id_vieclam, tag } = req.body;
     if (!page) page = 1;
     if (!pageSize) pageSize = 24;
@@ -60,7 +61,7 @@ exports.danhSachViecLam = async (req, res, next) => {
       id_vieclam = Number(id_vieclam);
       condition = { id_vieclam: id_vieclam };
       let viecLam = await ViecLam.findOne({ id_vieclam: id_vieclam });
-      let id_uv = req.user && req.user.data ? req.user.data.idTimViec365 : 0;
+      let id_uv = req.user && req.user.data ? req.user.data._id : 0;
       if (viecLam) {
         //cap nhat luot xem
         let luot_xem = viecLam.luot_xem + 1;
@@ -80,10 +81,8 @@ exports.danhSachViecLam = async (req, res, next) => {
             $lookup: {
               from: "Users",
               localField: "id_ntd",
-              foreignField: "idTimViec365",
-              pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-              ],
+              foreignField: "_id",
+              pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
               as: "NTD",
             },
           },
@@ -104,9 +103,11 @@ exports.danhSachViecLam = async (req, res, next) => {
               ntd_address: "$NTD.address",
               ntd_userName: "$NTD.userName",
               ntd_createdAt: "$NTD.createdAt",
+              address: "address",
             },
           },
         ]);
+        // console.log("viecLamKhac", viecLamKhac);
         //ten nganh nghe
         let arr_nganh = viecLam.nganh_nghe;
         arr_nganh = arr_nganh.split(", ");
@@ -138,10 +139,8 @@ exports.danhSachViecLam = async (req, res, next) => {
             $lookup: {
               from: "Users",
               localField: "id_ntd",
-              foreignField: "idTimViec365",
-              pipeline: [
-                { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-              ],
+              foreignField: "_id",
+              pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
               as: "NTD",
             },
           },
@@ -201,10 +200,8 @@ exports.danhSachViecLam = async (req, res, next) => {
         $lookup: {
           from: "Users",
           localField: "id_ntd",
-          foreignField: "idTimViec365",
-          pipeline: [
-            { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-          ],
+          foreignField: "_id",
+          pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
           as: "NTD",
         },
       },
@@ -257,6 +254,7 @@ exports.danhSachViecLam = async (req, res, next) => {
           ntd_userName: "$NTD.userName",
           ntd_createdAt: "$NTD.createdAt",
           CaLamViec: "$CaLamViec",
+          address: "$address",
         },
       },
     ]);
@@ -322,10 +320,8 @@ exports.trangChu = async (req, res, next) => {
         $lookup: {
           from: "Users",
           localField: "id_ntd",
-          foreignField: "idTimViec365",
-          pipeline: [
-            { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-          ],
+          foreignField: "_id",
+          pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
           as: "NTD",
         },
       },
@@ -346,6 +342,7 @@ exports.trangChu = async (req, res, next) => {
           ntd_address: "$NTD.address",
           ntd_userName: "$NTD.userName",
           ntd_createdAt: "$NTD.createdAt",
+          address: "$address",
         },
       },
     ]);
@@ -362,10 +359,8 @@ exports.trangChu = async (req, res, next) => {
         $lookup: {
           from: "Users",
           localField: "id_ntd",
-          foreignField: "idTimViec365",
-          pipeline: [
-            { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-          ],
+          foreignField: "_id",
+          pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
           as: "NTD",
         },
       },
@@ -386,6 +381,7 @@ exports.trangChu = async (req, res, next) => {
           ntd_address: "$NTD.address",
           ntd_userName: "$NTD.userName",
           ntd_createdAt: "$NTD.createdAt",
+          address: "$address",
         },
       },
     ]);
@@ -422,6 +418,7 @@ exports.thongKeViecLam = async (req, res, next) => {
     // let condition = {last_time: {$gt: now}};
     let totalHinhThuc = [];
     let listJob = await ViecLam.find(condition);
+    console.log("listJob", listJob.length);
     for (let i = 1; i <= 3; i++) {
       let total = listJob.filter((e) => e.hinh_thuc == i).length;
       totalHinhThuc.push(total);
@@ -476,6 +473,7 @@ exports.thongKeDanhSachViecLam = async (req, res, next) => {
   try {
     let { page, pageSize, id_nganh, id_hinhthuc, id_city, district, key, tag } =
       req.body;
+    console.log("req.body", req.body);
     if (!page) page = 1;
     if (!pageSize) pageSize = 10;
     page = Number(page);
@@ -485,17 +483,20 @@ exports.thongKeDanhSachViecLam = async (req, res, next) => {
     let time = functions.convertTimestamp(Date.now());
     time = time - 86400;
     let now = new Date(Date.now());
-    // console.log("time", time);
-    let condition = { time_td: { $gt: time } };
+    // let condition = {};
+    // let condition = { time_td: { $gt: time } };
+    let condition = {};
     // let condition = {last_time: {$gt: now}};
     let listBlog = [];
     if (key) {
       let arr_key = key.split(" ");
       let orCondition = [];
+      console.log("arr_key", arr_key);
       for (let i = 0; i < arr_key.length; i++) {
         orCondition.push({ vi_tri: new RegExp(arr_key[i], "i") });
       }
-      condition = { last_time: { $gt: now }, $or: orCondition };
+      // condition = { last_time: { $gt: now }, $or: orCondition };
+      condition = { $or: orCondition };
     }
     if (id_nganh) {
       condition["nganh_nghe"] = new RegExp(`\\b${id_nganh}\\b`);
@@ -531,10 +532,8 @@ exports.thongKeDanhSachViecLam = async (req, res, next) => {
         $lookup: {
           from: "Users",
           localField: "id_ntd",
-          foreignField: "idTimViec365",
-          pipeline: [
-            { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-          ],
+          foreignField: "_id",
+          pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
           as: "NTD",
         },
       },
@@ -592,10 +591,8 @@ exports.viecLamTheoHinhThuc = async (req, res, next) => {
           $lookup: {
             from: "Users",
             localField: "id_ntd",
-            foreignField: "idTimViec365",
-            pipeline: [
-              { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-            ],
+            foreignField: "_id",
+            pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
             as: "NTD",
           },
         },
@@ -653,10 +650,8 @@ exports.viecLamTheoNganhNghe = async (req, res, next) => {
           $lookup: {
             from: "Users",
             localField: "id_ntd",
-            foreignField: "idTimViec365",
-            pipeline: [
-              { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-            ],
+            foreignField: "_id",
+            pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
             as: "NTD",
           },
         },
@@ -711,10 +706,8 @@ exports.viecLamTheoTinhThanh = async (req, res, next) => {
           $lookup: {
             from: "Users",
             localField: "id_ntd",
-            foreignField: "idTimViec365",
-            pipeline: [
-              { $match: { idTimViec365: { $nin: [0, null] }, type: 1 } },
-            ],
+            foreignField: "_id",
+            pipeline: [{ $match: { _id: { $nin: [0, null] }, type: 1 } }],
             as: "NTD",
           },
         },
@@ -761,9 +754,9 @@ exports.getInfoCompany = async (req, res, next) => {
     if (id_ntd) {
       id_ntd = Number(id_ntd);
       let ntd = await Users.findOne(
-        { idTimViec365: id_ntd, type: 1, inforVLTG: { $ne: null } },
+        { _id: id_ntd, type: 1, inforVLTG: { $ne: null } },
         {
-          idTimViec365: "$idTimViec365",
+          _id: "$_id",
           userName: "$userName",
           address: "$address",
           phone: "$phone",

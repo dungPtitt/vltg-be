@@ -3,37 +3,37 @@ const nodemailer = require("nodemailer");
 // tạo biến môi trường
 const dotenv = require("dotenv");
 // gọi api
-const axios = require('axios');
+const axios = require("axios");
 // check ảnh và video
-const fs = require('fs');
+const fs = require("fs");
 //
-const path = require('path');
+const path = require("path");
 //check ảnh
-const { promisify } = require('util')
+const { promisify } = require("util");
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-const allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
-const functions = require('../functions');
-const Users = require('../../models/Users');
-const AdminUser = require('../../models/ViecLamTheoGio/AdminUser');
-const AdminUserRight = require('../../models/ViecLamTheoGio/AdminUserRight');
+const allowedExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+const functions = require("../functions");
+const Users = require("../../models/Users");
+const AdminUser = require("../../models/ViecLamTheoGio/AdminUser");
+const AdminUserRight = require("../../models/ViecLamTheoGio/AdminUserRight");
 
 dotenv.config();
 
 // hàm cấu hình mail
 const transport = nodemailer.createTransport({
-    host: process.env.NODE_MAILER_HOST,
-    port: Number(process.env.NODE_MAILER_PORT),
-    service: process.env.NODE_MAILER_SERVICE,
-    secure: true,
-    auth: {
-        user: process.env.AUTH_EMAIL,
-        pass: process.env.AUTH_PASSWORD
-    }
+  host: process.env.NODE_MAILER_HOST,
+  port: Number(process.env.NODE_MAILER_PORT),
+  service: process.env.NODE_MAILER_SERVICE,
+  secure: true,
+  auth: {
+    user: process.env.AUTH_EMAIL,
+    pass: process.env.AUTH_PASSWORD,
+  },
 });
 
 exports.sendEmailUv = async (ntd, ungVien) => {
-    let body =`<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: arial;padding-top: 20px;padding-bottom: 20px;">
+  let body = `<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: arial;padding-top: 20px;padding-bottom: 20px;">
             <table style="width: 700px;background:#fff; margin:0 auto;border-collapse: collapse;color: #000">
                 <tr style="height: 120px;background-image: url(https://vieclamtheogio.timviec365.vn/images/banner_mailxemUV.png);background-size:100% 100%;background-repeat: no-repeat;float: left;width: 100%;padding: 0px 30px;box-sizing: border-box;">
                 </tr>
@@ -61,27 +61,28 @@ exports.sendEmailUv = async (ntd, ungVien) => {
                 <tr><td style="padding-bottom: 39px;background: #dad7d7"></td></tr>
             </table>
             </body>`;
-    let subject = "[Vieclamtheogio.Timviec365.vn] Nhà tuyển dụng vừa xem hồ sơ của bạn";
-    let options = {
-        from: process.env.AUTH_EMAIL,
-        to: ungVien.email,
-        subject: subject,
-        html: body
+  let subject =
+    "[Vieclamtheogio.Timviec365.vn] Nhà tuyển dụng vừa xem hồ sơ của bạn";
+  let options = {
+    from: process.env.AUTH_EMAIL,
+    to: ungVien.email,
+    subject: subject,
+    html: body,
+  };
+  transport.sendMail(options, (err, info) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Message sent: " + info.response);
     }
-    transport.sendMail(options, (err, info) => {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log('Message sent: ' + info.response);
-        }
-    })
+  });
 };
 
 exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
-    let uv_name = ungVien.userName;
-    let ntd_name = ntd.userName;
-    let vi_tri = viecLam.vi_tri;
-    let body = `<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: unset;padding-top: 20px;padding-bottom: 20px;">
+  let uv_name = ungVien.userName;
+  let ntd_name = ntd.userName;
+  let vi_tri = viecLam.vi_tri;
+  let body = `<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: unset;padding-top: 20px;padding-bottom: 20px;">
     <table style="width: 600px;background:#fff; margin:0 auto;border-collapse: collapse;color: #000">
         <tr style="height: 165px;background-image: url(https://timviec365.vn/images/email/bg1.png);background-size:100% 100%;background-repeat: no-repeat;float: left;width: 100%;padding: 0px 30px;box-sizing: border-box;">
         <td style="padding-top: 23px;float: left;">
@@ -106,126 +107,133 @@ exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
             <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.timviec365.vn/ung-vien-${ungVien.idTimViec365}.html" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
         </td>
         </tr>`;
-    let subject = uv_name + " - Timviec365.vn đã ứng tuyển vào vị trí " + vi_tri;
-    let options = {
-        from: process.env.AUTH_EMAIL,
-        to: ntd.email,
-        subject: subject,
-        html: body
+  let subject = uv_name + " - Timviec365.vn đã ứng tuyển vào vị trí " + vi_tri;
+  let options = {
+    from: process.env.AUTH_EMAIL,
+    to: ntd.email,
+    subject: subject,
+    html: body,
+  };
+  transport.sendMail(options, (err, info) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Message sent: " + info.response);
     }
-    transport.sendMail(options, (err, info) => {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log('Message sent: ' + info.response);
-        }
-    })
+  });
 };
 
 exports.checkCompany = async (req, res, next) => {
-    let id_ntd = req.user.data.idTimViec365;
-    let ntd = await Users.findOne({idTimViec365: id_ntd, type: 1});
-    if(ntd) {
-        return next();
-    }
-    return functions.setError(res, "Not company or company not found!");
-}
+  let id_ntd = req?.user?.data?._id;
+  let ntd = await Users.findOne({ _id: id_ntd, type: 1 });
+  if (ntd) {
+    return next();
+  }
+  return functions.setError(res, "Not company or company not found!");
+};
 
 exports.checkCandidate = async (req, res, next) => {
-    let id_uv = req.user.data.idTimViec365;
-    let uv = await Users.findOne({idTimViec365: id_uv, type: 0});
-    if(uv) {
-        return next();
-    }
-    return functions.setError(res, "Not candidate or candidate not found!");
-}
+  let uv = await Users.findOne({ _id: req?.user?.data?._id, type: 0 });
+  if (uv) {
+    return next();
+  }
+  return functions.setError(res, "Not candidate or candidate not found!");
+};
 
 // ham check admin viec lam theo gio
 exports.checkAdmin = async (req, res, next) => {
-    let user = req.user.data;
-    let admin = await functions.getDatafindOne(AdminUser, { adm_id: user.adm_id, adm_active: 1 });
-    if (admin && admin.adm_active == 1) {
-        req.infoAdmin = admin;
-        return next();
-    }
-    return functions.setError(res, "is not admin VLTG or not active");
-}
+  let user = req.user.data;
+  let admin = await functions.getDatafindOne(AdminUser, {
+    adm_id: user.adm_id,
+    adm_active: 1,
+  });
+  if (admin && admin.adm_active == 1) {
+    req.infoAdmin = admin;
+    return next();
+  }
+  return functions.setError(res, "is not admin VLTG or not active");
+};
 
 //check quyen admin
 exports.checkRight = (moduleId, perId) => {
-    return async (req, res, next) => {
-        try {
-            if (!moduleId || !perId) {
-                return functions.setError(res, "Missing input moduleId or perId", 505);
-            }
-            let infoAdmin = req.infoAdmin;
-            if (infoAdmin.adm_isadmin) return next();
-            let permission = await AdminUserRight.findOne({ adu_admin_id: infoAdmin.adm_id, adu_admin_module_id: moduleId }, { adu_add: 1, adu_edit: 1, adu_delete: 1 });
-            if (!permission) {
-                return functions.setError(res, "No right", 403);
-            }
-            if (perId == 1) return next();
-            if (perId == 2 && permission.adu_add == 1) return next();
-            if (perId == 3 && permission.adu_edit == 1) return next();
-            if (perId == 4 && permission.adu_delete == 1) return next();
-            return functions.setError(res, "No right", 403);
-        } catch (e) {
-            return res.status(505).json({ message: e });
-        }
-
-    };
+  return async (req, res, next) => {
+    try {
+      if (!moduleId || !perId) {
+        return functions.setError(res, "Missing input moduleId or perId", 505);
+      }
+      let infoAdmin = req.infoAdmin;
+      if (infoAdmin.adm_isadmin) return next();
+      let permission = await AdminUserRight.findOne(
+        { adu_admin_id: infoAdmin.adm_id, adu_admin_module_id: moduleId },
+        { adu_add: 1, adu_edit: 1, adu_delete: 1 }
+      );
+      if (!permission) {
+        return functions.setError(res, "No right", 403);
+      }
+      if (perId == 1) return next();
+      if (perId == 2 && permission.adu_add == 1) return next();
+      if (perId == 3 && permission.adu_edit == 1) return next();
+      if (perId == 4 && permission.adu_delete == 1) return next();
+      return functions.setError(res, "No right", 403);
+    } catch (e) {
+      return res.status(505).json({ message: e });
+    }
+  };
 };
 
 // hàm check ảnh
 exports.checkFile = async (filePath) => {
-    if (typeof (filePath) !== 'string') {
-        return false;
-    }
-    const { size } = await promisify(fs.stat)(filePath);
-    if (size > MAX_FILE_SIZE) {
-        return false;
-    }
-    //check dinh dang file
-    let fileCheck = path.extname(filePath);
-    if (allowedExtensions.includes(fileCheck.toLocaleLowerCase()) === false) {
-        return false
-    }
-    return true;
+  if (typeof filePath !== "string") {
+    return false;
+  }
+  const { size } = await promisify(fs.stat)(filePath);
+  if (size > MAX_FILE_SIZE) {
+    return false;
+  }
+  //check dinh dang file
+  let fileCheck = path.extname(filePath);
+  if (allowedExtensions.includes(fileCheck.toLocaleLowerCase()) === false) {
+    return false;
+  }
+  return true;
 };
 
-exports.uploadFileNameRandom = async (folder, time_created ,file_img) => {
-    let filename = '';
-    const date = new Date(time_created*1000);
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    const day = ('0' + date.getDate()).slice(-2);
-    const timestamp = Math.round(date.getTime() / 1000);
+exports.uploadFileNameRandom = async (folder, time_created, file_img) => {
+  let filename = "";
+  const date = new Date(time_created * 1000);
+  const year = date.getFullYear();
+  const month = ("0" + (date.getMonth() + 1)).slice(-2);
+  const day = ("0" + date.getDate()).slice(-2);
+  const timestamp = Math.round(date.getTime() / 1000);
 
-    const dir = `../storage/base365/vltg/pictures/${folder}/${year}/${month}/${day}/`;
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+  const dir = `../storage/base365/vltg/pictures/${folder}/${year}/${month}/${day}/`;
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  filename = `${timestamp}-user-${file_img.originalFilename}`.replace(/,/g, "");
+  const filePath = dir + filename;
+  fs.readFile(file_img.path, (err, data) => {
+    if (err) {
+      console.log(err);
     }
-
-    filename = `${timestamp}-user-${file_img.originalFilename}`.replace(/,/g, '');
-    const filePath = dir + filename;
-    fs.readFile(file_img.path, (err, data) => {
-        if (err) {
-            console.log(err)
-        }
-        fs.writeFile(filePath, data, (err) => {
-            if (err) {
-                console.log(err)
-            }
-        });
+    fs.writeFile(filePath, data, (err) => {
+      if (err) {
+        console.log(err);
+      }
     });
-    return filename;
-}
+  });
+  return filename;
+};
 
 exports.getLinkFile = (folder, time, fileName) => {
-    let date = new Date(time * 1000);
-    const y = date.getFullYear();
-    const m = ('0' + (date.getMonth() + 1)).slice(-2);
-    const d = ('0' + date.getDate()).slice(-2);
-    let link = process.env.port_picture_qlc + `/base365/vltg/pictures/${folder}/${y}/${m}/${d}/${fileName}`;
-    return link;
-}
+  if (!fileName) return "";
+  let date = new Date(time * 1000);
+  const y = date.getFullYear();
+  const m = ("0" + (date.getMonth() + 1)).slice(-2);
+  const d = ("0" + date.getDate()).slice(-2);
+  let link =
+    process.env.local +
+    `/base365/vltg/pictures/${folder}/${y}/${m}/${d}/${fileName}`;
+  return link;
+};
