@@ -29,12 +29,17 @@ exports.register = async (req, res, next) => {
       if (checkEmail)
         return functions.setError(res, "Email already exists", 401);
       let maxId = await functions.getMaxIdByField(Users, "_id");
+      let diem_free = 0;
+      if (type == 1) {
+        diem_free = 10;
+      }
       const user = new Users({
         _id: maxId,
         userName,
         email,
         password: md5(password),
         type,
+        diem_free,
         createdAt: time,
       });
       await user.save();
@@ -130,6 +135,29 @@ exports.changePassword = async (req, res, next) => {
   }
 };
 
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    let { email } = req.body;
+    if (email) {
+      let user = await Users.findOne({ email: email });
+      if (user) {
+        let newPassword = functions.randomNumber;
+        console.log("new", newPassword);
+        // await functions.sendEmailForgotPassword(email, newPassword);
+        // let newPass = md5(newPassword);
+        // await Users.findOneAndUpdate({ email: email }, { password: newPass });
+        return functions.success(res, "Forgot password success", {
+          password: newPassword,
+        });
+      }
+      return functions.setError(res, "Email not exists", 401);
+    }
+    return functions.setError(res, "Missing fields", 400);
+  } catch (error) {
+    console.log("err:", error);
+    return functions.setError(res, error.message);
+  }
+};
 exports.danhSachTinTuyenDungMoi = async (req, res, next) => {
   try {
     let id_ntd = req.user.data._id;
@@ -864,8 +892,8 @@ exports.dangTin = async (req, res, next) => {
             ht_luong, //co dinh or uoc luong
             tra_luong, //hình thức trả lương
             luong,
-            luong_fist,
-            luong_end,
+            luong_first,
+            luong_last,
             thoi_gian,
             hoa_hong,
             so_luong,
@@ -925,14 +953,14 @@ exports.dangTin = async (req, res, next) => {
           ) {
             if (functions.checkPhoneNumber(phone_lh)) {
               alias = functions.renderAlias(vi_tri);
-              time_td = functions.convertTimestamp(time_td);
+              time_td = functions.convertTimestamp(time_td * 1000);
               if (time_td < time)
                 return functions.setError(res, "time_td must >= time now", 400);
               let muc_luong;
               if (ht_luong == 1) {
                 muc_luong = luong;
               } else {
-                muc_luong = `${luong_fist} - ${luong_end}`;
+                muc_luong = `${luong_first} - ${luong_last}`;
               }
               let maxId = await functions.getMaxIdByField(
                 ViecLam,
@@ -951,6 +979,9 @@ exports.dangTin = async (req, res, next) => {
                 ht_luong,
                 tra_luong,
                 muc_luong,
+                luong,
+                luong_first,
+                luong_last,
                 thoi_gian,
                 hoa_hong,
                 so_luong,
@@ -970,7 +1001,7 @@ exports.dangTin = async (req, res, next) => {
                 address_lh,
                 email_lh,
                 vl_created_time: time,
-                active: 0,
+                active: 1,
                 created_at: time,
                 address,
               });
@@ -1094,8 +1125,8 @@ exports.suaTin = async (req, res, next) => {
         ht_luong, //co dinh or uoc luong
         tra_luong, //hình thức trả lương
         luong,
-        luong_fist,
-        luong_end,
+        luong_first,
+        luong_last,
         thoi_gian,
         hoa_hong,
         so_luong,
@@ -1157,8 +1188,10 @@ exports.suaTin = async (req, res, next) => {
             if (ht_luong == 1) {
               muc_luong = luong;
             } else {
-              muc_luong = `${luong_fist} - ${luong_end}`;
+              muc_luong = `${luong_first} - ${luong_last}`;
             }
+            console.log("luong_first:::", luong_first);
+            console.log("luong:::", luong);
             let viecLam = await ViecLam.findOneAndUpdate(
               { id_vieclam: id_vieclam },
               {
@@ -1172,6 +1205,9 @@ exports.suaTin = async (req, res, next) => {
                 ht_luong,
                 tra_luong,
                 muc_luong,
+                luong,
+                luong_first,
+                luong_last,
                 thoi_gian,
                 hoa_hong,
                 so_luong,
@@ -1235,6 +1271,7 @@ exports.suaTin = async (req, res, next) => {
     }
     return functions.setError(res, "Not company", 403);
   } catch (error) {
+    console.log("error", error);
     return functions.setError(res, error.message);
   }
 };
@@ -1314,7 +1351,8 @@ exports.ungVienMoiUngTuyen = async (req, res, next) => {
       { $skip: skip },
       { $limit: pageSize },
     ]);
-    let total = await UngTuyen.distinct("id_viec", condition3);
+    // let total = await functions.findCount(UngTuyen, condition3);
+    let total = await UngTuyen.distinct("id_uv", condition3);
     total = total.length;
     return functions.success(res, "danh sach ung vien moi ung tuyen", {
       total,
@@ -1471,7 +1509,7 @@ exports.updateGhiChuNtdXemUv = async (req, res, next) => {
 exports.getDiem = async (req, res, next) => {
   try {
     let id_ntd = req.user.data._id;
-    let ntd = await Users.findOne({ _id: id_ntd, type: 1 }, { inforVLTG: 1 });
+    let ntd = await Users.findOne({ _id: id_ntd, type: 1 });
     if (ntd) {
       return functions.success(res, "Get diem thanh cong", { data: ntd });
     }
@@ -1484,7 +1522,7 @@ exports.getDiem = async (req, res, next) => {
 exports.ntdXemUv = async (req, res, next) => {
   try {
     let id_ntd = req.user.data._id;
-    let ntd = await Users.findOne({ _id: id_ntd, type: 1 }, { inforVLTG: 1 });
+    let ntd = await Users.findOne({ _id: id_ntd, type: 1 });
     let id_uv = req.body.id_uv;
     if (ntd && id_uv) {
       id_uv = Number(id_uv);

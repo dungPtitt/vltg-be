@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema(
     email: {
       // Email đăng nhập (nếu đối tượng đăng ký bằng email)
       type: String,
-      default: null,
+      required: true,
     },
     phone: {
       // Sđt liên hệ
@@ -122,8 +122,8 @@ const UserSchema = new mongoose.Schema(
     },
     com_size: {
       // Quy mô công ty
-      type: Number,
-      default: 0,
+      type: String,
+      default: null,
     },
     usc_mst: {
       // Mã số thuế
@@ -168,11 +168,11 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-UserSchema.index({
-  "inForCompany.description": "text",
-  userName: "text",
-  "inForCompany.timviec365.usc_lv": "text",
-  updatedAt: 1,
-});
+// UserSchema.index({
+//   "inForCompany.description": "text",
+//   userName: "text",
+//   "inForCompany.usc_lv": "text",
+//   updatedAt: 1,
+// });
 
 module.exports = mongoose.model("Users", UserSchema);

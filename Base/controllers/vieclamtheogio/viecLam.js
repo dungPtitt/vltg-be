@@ -12,7 +12,7 @@ const folder_img = "user_ntd";
 //danh sach nganh nghe
 exports.danhSachViecLam = async (req, res, next) => {
   try {
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
     let { page, pageSize, key, city, district, id_vieclam, tag } = req.body;
     if (!page) page = 1;
     if (!pageSize) pageSize = 24;
@@ -103,6 +103,11 @@ exports.danhSachViecLam = async (req, res, next) => {
               ntd_userName: "$NTD.userName",
               ntd_createdAt: "$NTD.createdAt",
               address: "address",
+              luong: "$luong",
+              luong_first: "$luong_first",
+              luong_last: "$luong_last",
+              ht_luong: "$ht_luong",
+              time_td: "$time_td",
             },
           },
         ]);
@@ -161,6 +166,11 @@ exports.danhSachViecLam = async (req, res, next) => {
               ntd_address: "$NTD.address",
               ntd_userName: "$NTD.userName",
               ntd_createdAt: "$NTD.createdAt",
+              luong: "$luong",
+              luong_first: "$luong_first",
+              luong_last: "$luong_last",
+              ht_luong: "$ht_luong",
+              time_td: "$time_td",
             },
           },
         ]);
@@ -223,11 +233,14 @@ exports.danhSachViecLam = async (req, res, next) => {
           quan_huyen: "$quan_huyen",
           hinh_thuc: "$hinh_thuc",
           muc_luong: "$muc_luong",
+          luong: "$luong",
+          luong_first: "$luong_first",
+          luong_last: "$luong_last",
+          ht_luong: "$ht_luong",
           tra_luong: "$tra_luong",
           id_ntd: "$id_ntd",
           hoc_van: "$hoc_van",
           thoi_gian: "$thoi_gian",
-          ht_luong: "$ht_luong",
           hoa_hong: "$hoa_hong",
           so_luong: "$so_luong",
           nganh_nghe: "$nganh_nghe",
@@ -271,6 +284,11 @@ exports.danhSachViecLam = async (req, res, next) => {
       danhSachViecLam[i].viecLamKhac = viecLamKhac;
       danhSachViecLam[i].viecLamTuongTu = viecLamTuongTu;
       danhSachViecLam[i].tenNganhNghe = tenNganhNghe;
+      if (danhSachViecLam[i].ht_luong == 2) {
+        let a = danhSachViecLam[i].muc_luong.split(" - ");
+        danhSachViecLam[i].luong_first = a[0];
+        danhSachViecLam[i].luong_end = a[1];
+      }
     }
     let total = await functions.findCount(ViecLam, condition);
     return functions.success(res, "danh sach viec lam", {
@@ -318,7 +336,7 @@ exports.trangChu = async (req, res, next) => {
       { $match: condition },
       { $sort: { created_at: -1 } },
       { $skip: skip },
-      { $limit: 12 },
+      { $limit: pageSize },
       {
         $lookup: {
           from: "Users",
@@ -338,6 +356,11 @@ exports.trangChu = async (req, res, next) => {
           quan_huyen: "$quan_huyen",
           hinh_thuc: "$hinh_thuc",
           muc_luong: "$muc_luong",
+          ht_luong: "$ht_luong",
+          luong: "$luong",
+          luong_first: "$luong_first",
+          luong_last: "$luong_last",
+          time_td: "$time_td",
           tra_luong: "$tra_luong",
           nganh_nghe: "$nganh_nghe",
           id_ntd: "$id_ntd",
@@ -352,12 +375,21 @@ exports.trangChu = async (req, res, next) => {
     let total1 = await functions.findCount(ViecLam, condition);
     //viec lam luong hap dan
     // muc_luong: {$gte: "3"}
-    let condition2 = { ht_luong: 1, time_td: { $gt: time } };
+    let condition2 = {
+      $or: [
+        { tra_luong: 1, luong: { $gte: 30000 } },
+        { tra_luong: 2, luong: { $gte: 300000 } },
+        { tra_luong: 3, luong: { $gte: 4000000 } },
+        { tra_luong: 1, luong_first: { $gte: 30000 } },
+        { tra_luong: 2, luong_first: { $gte: 300000 } },
+        { tra_luong: 3, luong_first: { $gte: 4000000 } },
+      ],
+    };
     let viecLamHapDan = await ViecLam.aggregate([
       { $match: condition2 },
       { $sort: { tra_luong: 1, muc_luong: -1 } },
       { $skip: skip },
-      { $limit: 20 },
+      { $limit: pageSize },
       {
         $lookup: {
           from: "Users",
@@ -377,6 +409,11 @@ exports.trangChu = async (req, res, next) => {
           quan_huyen: "$quan_huyen",
           hinh_thuc: "$hinh_thuc",
           muc_luong: "$muc_luong",
+          ht_luong: "$ht_luong",
+          luong: "$luong",
+          luong_first: "$luong_first",
+          luong_last: "$luong_last",
+          time_td: "$time_td",
           tra_luong: "$tra_luong",
           nganh_nghe: "$nganh_nghe",
           id_ntd: "$id_ntd",
@@ -390,13 +427,19 @@ exports.trangChu = async (req, res, next) => {
     ]);
     let total2 = await functions.findCount(ViecLam, condition2);
     for (let i = 0; i < viecLamMoiNhat.length; i++) {
-      viecLamMoiNhat[i].linkAvatar = functions.getUrlLogoCompany(
+      viecLamMoiNhat[i].linkAvatar = functions.getLinkFile(
+        "user_ntd",
         viecLamMoiNhat[i].ntd_createdAt,
         viecLamMoiNhat[i].ntd_avatar
       );
     }
     for (let i = 0; i < viecLamHapDan.length; i++) {
-      viecLamHapDan[i].linkAvatar = functions.getUrlLogoCompany(
+      // viecLamHapDan[i].linkAvatar = functions.getUrlLogoCompany(
+      //   viecLamHapDan[i].ntd_createdAt,
+      //   viecLamHapDan[i].ntd_avatar
+      // );
+      viecLamHapDan[i].linkAvatar = functions.getLinkFile(
+        "user_ntd",
         viecLamHapDan[i].ntd_createdAt,
         viecLamHapDan[i].ntd_avatar
       );
@@ -422,7 +465,7 @@ exports.thongKeViecLam = async (req, res, next) => {
     // let condition = {last_time: {$gt: now}};
     let totalHinhThuc = [];
     let listJob = await ViecLam.find(condition);
-    console.log("listJob", listJob.length);
+    // console.log("listJob", listJob.length);
     for (let i = 1; i <= 3; i++) {
       let total = listJob.filter((e) => e.hinh_thuc == i).length;
       totalHinhThuc.push(total);
@@ -551,6 +594,11 @@ exports.thongKeDanhSachViecLam = async (req, res, next) => {
           quan_huyen: "$quan_huyen",
           hinh_thuc: "$hinh_thuc",
           muc_luong: "$muc_luong",
+          ht_luong: "$ht_luong",
+          luong_first: "$luong_first",
+          luong: "$luong",
+          luong_last: "$luong_last",
+          time_td: "$time_td",
           tra_luong: "$tra_luong",
           nganh_nghe: "$nganh_nghe",
           id_ntd: "$id_ntd",

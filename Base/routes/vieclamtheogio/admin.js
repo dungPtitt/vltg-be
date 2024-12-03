@@ -50,6 +50,14 @@ router.post(
   formData.parse(),
   admin.danhSachUngVienAndNtd
 );
+
+router.post(
+  "/getDetailUngVien",
+  [functions.checkToken, functions.checkAdmin, functions.checkRight(96, 1)],
+  formData.parse(),
+  admin.getDetailUngVien
+);
+
 router.post(
   "/createUngVien",
   [functions.checkToken, functions.checkAdmin, functions.checkRight(95, 2)],

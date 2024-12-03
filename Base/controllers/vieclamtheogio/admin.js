@@ -209,14 +209,25 @@ exports.getModules = async (req, res, next) => {
 
 exports.danhSachUngVienAndNtd = async (req, res, next) => {
   try {
-    let { type, _id, page, pageSize, phone, email, fromDate, toDate, source } =
-      req.body;
+    let {
+      type,
+      _id,
+      page,
+      pageSize,
+      phone,
+      email,
+      fromDate,
+      toDate,
+      userName,
+    } = req.body;
     if (!page) page = 1;
     if (!pageSize) pageSize = 30;
     page = Number(page);
     pageSize = Number(pageSize);
     const skip = (page - 1) * pageSize;
-    let condition = { _id: { $nin: [null, 0] } };
+    // let condition = { _id: { $nin: [null, 0] } };
+    console.log("body", req.body);
+    let condition = {};
 
     //phan biet danh sach nha tuyen dung <> ung vien
     //tk ung vien
@@ -231,6 +242,7 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
     //tim kiem
     if (phone) condition.phone = new RegExp(phone, "i");
     if (email) condition.email = new RegExp(email, "i");
+    if (userName) condition.userName = new RegExp(userName, "i");
     // tu ngay den ngay
     fromDate = functions.convertTimestamp(fromDate);
     toDate = functions.convertTimestamp(toDate);
@@ -239,7 +251,7 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
     if (toDate && fromDate)
       condition.createdAt = { $gte: fromDate, $lte: toDate };
     //
-    if (source) condition["inforVLTG.source"] = Number(source);
+    // if (source) condition["inforVLTG.source"] = Number(source);
     if (_id) condition._id = Number(_id);
     let danhSachUngVien = await Users.aggregate([
       { $match: condition },
@@ -290,11 +302,94 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
     }
     const total = await functions.findCount(Users, condition);
 
+    console.log("danhSachUngVien", danhSachUngVien);
     return functions.success(res, "Thong ke danh sach ntd", {
       total,
       data: danhSachUngVien,
     });
   } catch (error) {
+    return functions.setError(res, error.message);
+  }
+};
+
+exports.getDetailUngVien = async (req, res, next) => {
+  try {
+    let id_uv = req.body._id;
+    let uv = await Users.findOne(
+      { _id: id_uv, type: 0 },
+      {
+        userName: "$userName",
+        email: "$email",
+        emailContact: "$emailContact",
+        avatarUser: "$avatarUser",
+        phone: "$phone",
+        phoneTK: "$phoneTK",
+        city: "$city",
+        district: "$district",
+        address: "$address",
+        createdAt: "$createdAt",
+        updatedAt: "$updatedAt",
+        birthday: "$birthday",
+        gender: "$gender",
+        married: "$married",
+        uv_day: "$uv_day",
+        luot_xem: "$luot_xem",
+        uv_search: "$uv_search",
+        uv_source: "$uv_source",
+      }
+    ).lean();
+    if (uv) {
+      let time_created = uv.createdAt;
+      if (!time_created) time_created = functions.convertTimestamp(Date.now());
+      uv.linkAvatar = functions.getLinkFile(
+        folder_img_uv,
+        time_created,
+        uv.avatarUser
+      );
+
+      //thong tin cong viec mong muon
+      let uvCvmm = await UvCvmm.findOne({ id_uv_cvmm: id_uv }).lean();
+      if (uvCvmm) {
+        let job = await JobCategory.find({}, { jc_id: 1, jc_name: 1 });
+        let city = await City2.find(
+          { cit_parent: 0 },
+          { cit_id: 1, cit_name: 1 }
+        );
+        let nganh_nghe = uvCvmm.nganh_nghe;
+        let dia_diem = uvCvmm.dia_diem;
+
+        let name_job = [];
+        let name_city = [];
+        if (nganh_nghe) {
+          nganh_nghe = nganh_nghe.split(", ");
+          for (let i = 0; i < nganh_nghe.length; i++) {
+            let nn = job.filter((e) => e.jc_id == nganh_nghe[i]);
+            if (nn && nn.length > 0) {
+              name_job.push(nn[0]);
+            }
+          }
+        }
+        uvCvmm.name_job = name_job;
+        if (dia_diem) {
+          dia_diem = dia_diem.split(", ");
+          for (let i = 0; i < dia_diem.length; i++) {
+            let dd = city.filter((e) => e.cit_id == dia_diem[i]);
+            if (dd && dd.length > 0) {
+              name_city.push(dd[0]);
+            }
+          }
+        }
+        uvCvmm.name_job = name_job;
+        uvCvmm.name_city = name_city;
+      }
+      return functions.success(res, "lay ra thong tin thanh cong!", {
+        data: uv,
+        uvCvmm: uvCvmm,
+      });
+    }
+    return functions.setError(res, "Ung vien not found!", 404);
+  } catch (error) {
+    console.log("error:::", error);
     return functions.setError(res, error.message);
   }
 };
@@ -399,6 +494,7 @@ exports.createUngVien = async (req, res, next) => {
 
 exports.updateUngVien = async (req, res, next) => {
   try {
+    console.log("update", req.body);
     let {
       _id,
       userName,
@@ -790,6 +886,7 @@ exports.danhSachTin = async (req, res, next) => {
 
 exports.createTin = async (req, res, next) => {
   try {
+    console.log("create", req.body);
     let {
       id_ntd,
       vi_tri,
@@ -804,7 +901,7 @@ exports.createTin = async (req, res, next) => {
       ht_luong, //co dinh or uoc luong
       tra_luong, //hình thức trả lương
       luong,
-      luong_fist,
+      luong_first,
       luong_end,
       hoc_van,
       time_td,
@@ -872,7 +969,7 @@ exports.createTin = async (req, res, next) => {
             if (ht_luong == 1) {
               muc_luong = luong;
             } else {
-              muc_luong = `${luong_fist} - ${luong_end}`;
+              muc_luong = `${luong_first} - ${luong_end}`;
             }
             let maxId = await functions.getMaxIdByField(ViecLam, "id_vieclam");
 
@@ -916,8 +1013,8 @@ exports.createTin = async (req, res, next) => {
             if (list_ca && list_ca.length > 0) {
               for (let i = 0; i < list_ca.length; i++) {
                 let day = list_ca[i].day;
-                let ca_fist = list_ca[i].ca_fist;
-                let ca_last = list_ca[i].ca_last;
+                let ca_start_time = list_ca[i].ca_start_time;
+                let ca_end_time = list_ca[i].ca_end_time;
                 day = day.join(`, ${i + 1}`);
                 day = `${i + 1}${day}`;
                 let maxIdCaLamViec = await functions.getMaxIdByField(
@@ -927,8 +1024,8 @@ exports.createTin = async (req, res, next) => {
                 let caLamViec = new CaLamViec({
                   ca_id: maxIdCaLamViec,
                   ca_id_viec: maxId,
-                  ca_start_time: ca_fist,
-                  ca_end_time: ca_last,
+                  ca_start_time: ca_start_time,
+                  ca_end_time: ca_end_time,
                   day: day,
                 });
                 await caLamViec.save();
@@ -946,6 +1043,7 @@ exports.createTin = async (req, res, next) => {
     }
     return functions.setError(res, "Nha tuyen dung not found!", 404);
   } catch (error) {
+    console.log("error", error);
     return functions.setError(res, error.message);
   }
 };
@@ -967,7 +1065,7 @@ exports.updateTin = async (req, res, next) => {
       ht_luong, //co dinh or uoc luong
       tra_luong, //hình thức trả lương
       luong,
-      luong_fist,
+      luong_first,
       luong_end,
       hoc_van,
       time_td,
@@ -1032,7 +1130,7 @@ exports.updateTin = async (req, res, next) => {
           if (ht_luong == 1) {
             muc_luong = luong;
           } else {
-            muc_luong = `${luong_fist} - ${luong_end}`;
+            muc_luong = `${luong_first} - ${luong_end}`;
           }
           let viecLam = await ViecLam.findOneAndUpdate(
             { id_vieclam: id_vieclam },
@@ -1076,8 +1174,8 @@ exports.updateTin = async (req, res, next) => {
 
               for (let i = 0; i < list_ca.length; i++) {
                 let day = list_ca[i].day;
-                let ca_fist = list_ca[i].ca_fist;
-                let ca_last = list_ca[i].ca_last;
+                let ca_start_time = list_ca[i].ca_start_time;
+                let ca_end_time = list_ca[i].ca_end_time;
                 day = day.join(`, ${i + 1}`);
                 day = `${i + 1}${day}`;
                 let maxIdCaLamViec = await functions.getMaxIdByField(
@@ -1087,8 +1185,8 @@ exports.updateTin = async (req, res, next) => {
                 let caLamViec = new CaLamViec({
                   ca_id: maxIdCaLamViec,
                   ca_id_viec: id_vieclam,
-                  ca_start_time: ca_fist,
-                  ca_end_time: ca_last,
+                  ca_start_time: ca_start_time,
+                  ca_end_time: ca_end_time,
                   day: day,
                 });
                 await caLamViec.save();

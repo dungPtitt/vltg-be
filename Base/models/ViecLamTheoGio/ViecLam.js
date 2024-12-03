@@ -47,6 +47,18 @@ const ViecLamSchema = new Schema(
       type: String,
       default: null,
     },
+    luong: {
+      type: Number,
+      default: 0,
+    },
+    luong_first: {
+      type: Number,
+      default: 0,
+    },
+    luong_last: {
+      type: Number,
+      default: 0,
+    },
     ht_luong: {
       type: Number,
       default: 0,
@@ -125,7 +137,7 @@ const ViecLamSchema = new Schema(
     },
     active: {
       type: Number,
-      default: 0,
+      default: 1,
     },
     created_at: {
       type: Number,

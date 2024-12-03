@@ -7,7 +7,11 @@ const functions = require("../../services/functions");
 //------auth
 router.post("/register", formData.parse(), manageAccountCompany.register);
 router.post("/login", formData.parse(), manageAccountCompany.login);
-// router.post("/forgotPassword", formData.parse(), manageAccountCompany.forgotPassword);
+router.post(
+  "/forgotPassword",
+  formData.parse(),
+  manageAccountCompany.forgotPassword
+);
 // router.post("/resetPassword", formData.parse(), manageAccountCompany.resetPassword);
 router.post(
   "/changePassword",

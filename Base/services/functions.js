@@ -477,7 +477,7 @@ exports.sendEmailUv = async (ntd, ungVien) => {
                     <td colspan="2">
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;">Xin chào ${ntd.userName}</p>
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Cám ơn bạn đã tin tưởng Vieclamtheogio.timviec365.vn là cầu nối giúp bạn tìm kiếm công việc mong muốn.</p>
-                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;"><span><a style="    font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/ung-vien-${ntd.idTimViec365}.html">Hồ sơ của bạn</a> trên website Vieclamtheogio.timviec365.vn đã được nhà tuyển dụng <span><a style="font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/'.'-co' . ${ntd.idTimViec365} .'.html">${ntd.userName}</a> xem</span>. Bạn có thể tham khảo các công việc tương tự xem có phù hợp với mình không nhé!</p> 
+                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;"><span><a style="    font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/ung-vien-${ntd._id}.html">Hồ sơ của bạn</a> trên website Vieclamtheogio.vn đã được nhà tuyển dụng <span><a style="font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/'.'-co' . ${ntd._id} .'.html">${ntd.userName}</a> xem</span>. Bạn có thể tham khảo các công việc tương tự xem có phù hợp với mình không nhé!</p> 
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Trân trọng!</p>
                     </td>
                 </tr> 
@@ -496,8 +496,7 @@ exports.sendEmailUv = async (ntd, ungVien) => {
                 <tr><td style="padding-bottom: 39px;background: #dad7d7"></td></tr>
             </table>
             </body>`;
-  let subject =
-    "[Vieclamtheogio.Timviec365.vn] Nhà tuyển dụng vừa xem hồ sơ của bạn";
+  let subject = "[Vieclamtheogio.vn] Nhà tuyển dụng vừa xem hồ sơ của bạn";
   let options = {
     from: process.env.AUTH_EMAIL,
     to: ungVien.email,
@@ -539,10 +538,10 @@ exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
                 <p style="margin: 5px 0px 10px 0px; font-size: 18px;padding-left: 70px;"><span>Địa chỉ:  </span><span>${ungVien.address}</span></p>
 
             <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Để xem thông tin chi tiết ứng viên và tải CV ứng viên vui lòng nhấn nút:</p>
-            <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.timviec365.vn/ung-vien-${ungVien.idTimViec365}.html" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
+            <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.timviec365.vn/ung-vien-${ungVien._id}.html" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
         </td>
         </tr>`;
-  let subject = uv_name + " - Timviec365.vn đã ứng tuyển vào vị trí " + vi_tri;
+  let subject = uv_name + " đã ứng tuyển vào vị trí " + vi_tri;
   let options = {
     from: process.env.AUTH_EMAIL,
     to: ntd.email,
@@ -551,7 +550,33 @@ exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
   };
   transport.sendMail(options, (err, info) => {
     if (err) {
-      console.log(err);
+      console.log("err message::::", err);
+    } else {
+      console.log("Message sent: " + info.response);
+    }
+  });
+};
+
+exports.sendEmailForgotPassword = async (email, password) => {
+  let body = `<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: unset;padding-top: 20px;padding-bottom: 20px;">
+    <table style="width: 600px;background:#fff; margin:0 auto;border-collapse: collapse;color: #000">
+        <tr  style="float: left;padding:10px 30px 30px 30px;min-height: 289px;">
+        <td colspan="2">
+            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;padding-top: 15px;">Bạn vừa gửi yêu cầu reset mật khẩu</p>
+            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Mật khẩu mới của bạn là: <span style="color: #307df1;">${password}</span></p>
+            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Bạn vui lòng đăng nhập và đổi mật khẩu ngay sau khi đăng nhập. Trân trọng!</p>
+        </td>
+        </tr>`;
+  let subject = "Reset mật khẩu";
+  let options = {
+    from: process.env.AUTH_EMAIL,
+    to: email,
+    subject: subject,
+    html: body,
+  };
+  transport.sendMail(options, (err, info) => {
+    if (err) {
+      console.log("err message::::", err);
     } else {
       console.log("Message sent: " + info.response);
     }
@@ -743,6 +768,16 @@ exports.findCount = async (model, filter) => {
   }
 };
 
+exports.findDistinctCount = async (model, filter, distinctField) => {
+  try {
+    const distinctValues = await model.distinct(distinctField, filter);
+    return distinctValues.length;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 exports.getUrlLogoCompany = (createTime, logo) => {
   try {
     if (logo != null && logo != "") {
@@ -773,6 +808,15 @@ exports.pageFindWithFields = async (
 ) => {
   return model
     .find(condition, fields)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .lean();
+};
+
+exports.pageFind = async (model, condition, sort, skip, limit, select) => {
+  return model
+    .find(condition, select)
     .sort(sort)
     .skip(skip)
     .limit(limit)
