@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var manageAccountCompany = require("../../controllers/vieclamtheogio/manageAccountCompany");
+var admin = require("../../controllers/vieclamtheogio/admin");
 var formData = require("express-form-data");
 const functions = require("../../services/functions");
 
@@ -61,6 +62,14 @@ router.post(
   functions.checkCompany,
   formData.parse(),
   manageAccountCompany.lamMoiTin
+);
+
+router.post(
+  "/activeTin",
+  functions.checkToken,
+  functions.checkCompany,
+  formData.parse(),
+  admin.activeTin
 );
 
 //------ung vien moi ung tuyen

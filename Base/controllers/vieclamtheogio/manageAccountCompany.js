@@ -195,7 +195,7 @@ exports.danhSachTinTuyenDungMoi = async (req, res, next) => {
         if (viecLam.vl_created_time > today) count_vltn++;
         if (viecLam.time_td >= today) count_vlch++;
         else count_vlhh;
-        if (today - viecLam.last_time < 172800 && today - viecLam.last_time > 0)
+        if (viecLam.time_td - today < 172800 && viecLam.time_td - today > 0)
           count_vlshh++;
       }
       return functions.success(res, "Danh sach tin tuyen dung moi nhat", {
@@ -210,7 +210,7 @@ exports.danhSachTinTuyenDungMoi = async (req, res, next) => {
 
 exports.quanLyChung = async (req, res, next) => {
   try {
-    console.log("req:::", req.body);
+    // console.log("req:::", req.body);
     let id_ntd = req.user.data._id;
     let type = req.user.data.type;
     if (type == 1) {
@@ -229,6 +229,7 @@ exports.quanLyChung = async (req, res, next) => {
       let count_vlshh = 0;
       let count_vltn = 0;
       let count_vlch = 0;
+      let totalViecLam = await functions.findCount(ViecLam, { id_ntd: id_ntd });
 
       //lay ra tin tuyen dung moi nhat
       let viecLamMoiNhat = await ViecLam.find(
@@ -257,7 +258,7 @@ exports.quanLyChung = async (req, res, next) => {
       for (let i = 0; i < viecLam.length; i++) {
         if (viecLam[i].vl_created_time >= time) count_vltn++;
         if (viecLam[i].time_td >= today) count_vlch++;
-        else count_vlhh;
+        else count_vlhh++;
         if (
           today - viecLam[i].last_time < 172800 &&
           today - viecLam[i].last_time > 0
@@ -322,6 +323,7 @@ exports.quanLyChung = async (req, res, next) => {
         totalHoSoUngTuyen: totalHoSoUngTuyen,
         totalLocDiem: totalLocDiem,
         totalChuyenVienGuiUv: 0,
+        totalViecLam: totalViecLam,
         vlSapHetHan: count_vlshh,
         vlHetHan: count_vlhh,
         vlConHan: count_vlch,

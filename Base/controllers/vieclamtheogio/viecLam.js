@@ -331,7 +331,8 @@ exports.trangChu = async (req, res, next) => {
     let now = new Date(Date.now());
     let time = functions.convertTimestamp(Date.now());
     time = time - 86400;
-    let condition = { time_td: { $gt: time } };
+    // let condition = { time_td: { $gt: time }, active: 1 };
+    let condition = { active: 1 };
     let viecLamMoiNhat = await ViecLam.aggregate([
       { $match: condition },
       { $sort: { created_at: -1 } },
@@ -384,6 +385,7 @@ exports.trangChu = async (req, res, next) => {
         { tra_luong: 2, luong_first: { $gte: 300000 } },
         { tra_luong: 3, luong_first: { $gte: 4000000 } },
       ],
+      active: 1,
     };
     let viecLamHapDan = await ViecLam.aggregate([
       { $match: condition2 },
@@ -460,7 +462,7 @@ exports.thongKeViecLam = async (req, res, next) => {
     let time = functions.convertTimestamp(Date.now());
     time = time - 86400;
     let now = new Date(Date.now());
-    let condition = {};
+    let condition = { active: 1 };
     // let condition = { time_td: { $gt: time } };
     // let condition = {last_time: {$gt: now}};
     let totalHinhThuc = [];
