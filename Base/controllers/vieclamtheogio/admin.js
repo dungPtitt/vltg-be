@@ -494,7 +494,7 @@ exports.createUngVien = async (req, res, next) => {
 
 exports.updateUngVien = async (req, res, next) => {
   try {
-    console.log("update", req.body);
+    // console.log("update", req.body);
     let {
       _id,
       userName,
@@ -514,7 +514,6 @@ exports.updateUngVien = async (req, res, next) => {
       userName &&
       phone &&
       email &&
-      password &&
       city &&
       district &&
       address &&

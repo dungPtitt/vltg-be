@@ -22,14 +22,14 @@ exports.danhSachViecLam = async (req, res, next) => {
     let time = functions.convertTimestamp(Date.now());
     time = time - 86400;
     let listTag = [];
-    let condition = { time_td: { $gt: time } };
+    let condition = { time_td: { $gt: time }, active: 1 };
     if (key) {
       let arr_key = key.split(" ");
       let orCondition = [];
       for (let i = 0; i < arr_key.length; i++) {
         orCondition.push({ vi_tri: new RegExp(arr_key[i], "i") });
       }
-      condition = { time_td: { $gt: time }, $or: orCondition };
+      condition = { time_td: { $gt: time }, $or: orCondition, active: 1 };
     }
     if (city) {
       condition.dia_diem = new RegExp(`\\b${city}\\b`);
@@ -72,7 +72,11 @@ exports.danhSachViecLam = async (req, res, next) => {
         //viec lam cung nha tuyen dung
         viecLamKhac = await ViecLam.aggregate([
           {
-            $match: { id_ntd: viecLam.id_ntd, id_vieclam: { $ne: id_vieclam } },
+            $match: {
+              id_ntd: viecLam.id_ntd,
+              id_vieclam: { $ne: id_vieclam },
+              active: 1,
+            },
           },
           { $sort: { id_vieclam: -1 } },
           { $limit: 5 },
@@ -135,7 +139,11 @@ exports.danhSachViecLam = async (req, res, next) => {
           orCondition.push({ nganh_nghe: new RegExp(`\\b${arr_nganh[i]}\\b`) });
         }
         // time_td: {$gt: time}
-        let condition2 = { id_vieclam: { $ne: id_vieclam }, $or: orCondition };
+        let condition2 = {
+          id_vieclam: { $ne: id_vieclam },
+          $or: orCondition,
+          active: 1,
+        };
         viecLamTuongTu = await ViecLam.aggregate([
           { $match: condition2 },
           { $sort: { time_td: -1 } },
@@ -474,12 +482,12 @@ exports.thongKeViecLam = async (req, res, next) => {
     }
 
     //ung vien theo nganh nghe
-    let nganhNghe = await JobCategory.find(
-      { jc_id: { $lt: 11 } },
-      { jc_id: 1, jc_name: 1 }
-    )
+    // jc_id: {
+    //   $lt: 11;
+    // }
+    let nganhNghe = await JobCategory.find({}, { jc_id: 1, jc_name: 1 })
       .sort({ jc_id: 1 })
-      .limit(10)
+      // .limit(10)
       .lean();
     for (let i = 0; i < nganhNghe.length; i++) {
       let total = listJob.filter((e) => {
@@ -522,7 +530,7 @@ exports.thongKeDanhSachViecLam = async (req, res, next) => {
   try {
     let { page, pageSize, id_nganh, id_hinhthuc, id_city, district, key, tag } =
       req.body;
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
     if (!page) page = 1;
     if (!pageSize) pageSize = 10;
     page = Number(page);
@@ -534,7 +542,7 @@ exports.thongKeDanhSachViecLam = async (req, res, next) => {
     let now = new Date(Date.now());
     // let condition = {};
     // let condition = { time_td: { $gt: time } };
-    let condition = {};
+    let condition = { active: 1 };
     // let condition = {last_time: {$gt: now}};
     let listBlog = [];
     if (key) {
@@ -637,7 +645,7 @@ exports.viecLamTheoHinhThuc = async (req, res, next) => {
     let time = functions.convertTimestamp(Date.now());
     time = time - 86400;
     for (let i = 1; i <= 3; i++) {
-      let condition = { time_td: { $gt: time }, hinh_thuc: i };
+      let condition = { time_td: { $gt: time }, hinh_thuc: i, active: 1 };
       let total = await functions.findCount(ViecLam, condition);
       let danhSachVieclam = await ViecLam.aggregate([
         { $match: condition },
@@ -696,6 +704,7 @@ exports.viecLamTheoNganhNghe = async (req, res, next) => {
       let condition = {
         time_td: { $gt: time },
         nganh_nghe: new RegExp(nganhNghe[i].jc_id, "i"),
+        active: 1,
       };
       let total = await functions.findCount(ViecLam, condition);
       let danhSachVieclam = await ViecLam.aggregate([
@@ -751,6 +760,7 @@ exports.viecLamTheoTinhThanh = async (req, res, next) => {
       let condition = {
         time_td: { $gt: time },
         dia_diem: new RegExp(tinhThanh[i]._id, "i"),
+        active: 1,
       };
       let total = await functions.findCount(ViecLam, condition);
       if (total < 1) continue;

@@ -435,6 +435,10 @@ exports.convertTimestamp = (date) => {
   return Math.round(time.getTime() / 1000);
 };
 
+exports.convertDateToTimestamp = (date) => {
+  return Math.round(Date.parse(date) / 1000);
+};
+
 exports.renderAlias = (text) => {
   return slugify(text, {
     replacement: "-", // Ký tự thay thế khoảng trắng và các ký tự đặc biệt

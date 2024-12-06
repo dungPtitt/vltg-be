@@ -881,8 +881,9 @@ exports.dangTin = async (req, res, next) => {
         id_ntd: id_ntd,
         vi_tri: vi_tri,
       });
-      console.log("id_ntd>>", id_ntd);
-      console.log("checkTrungTitle>>", checkTrungTitle);
+      console.log("body", req.body);
+      // console.log("id_ntd>>", id_ntd);
+      // console.log("checkTrungTitle>>", checkTrungTitle);
       if (!checkTrungTitle) {
         if (viecLam1.length <= 0 && viecLam2.length <= 24) {
           let {
@@ -955,7 +956,7 @@ exports.dangTin = async (req, res, next) => {
           ) {
             if (functions.checkPhoneNumber(phone_lh)) {
               alias = functions.renderAlias(vi_tri);
-              time_td = functions.convertTimestamp(time_td * 1000);
+              time_td = functions.convertDateToTimestamp(time_td);
               if (time_td < time)
                 return functions.setError(res, "time_td must >= time now", 400);
               let muc_luong;
@@ -969,6 +970,7 @@ exports.dangTin = async (req, res, next) => {
                 "id_vieclam"
               );
 
+              console.log("time_td", time_td);
               let viecLam = new ViecLam({
                 id_vieclam: maxId,
                 id_ntd: id_ntd,
@@ -1047,7 +1049,7 @@ exports.dangTin = async (req, res, next) => {
         return functions.setError(
           res,
           "Mỗi tin của bạn cần đăng cách nhau 10 phút tối đa 24 tin/ngày!",
-          400
+          411
         );
       }
       return functions.setError(res, "Title bi trung!", 410);
