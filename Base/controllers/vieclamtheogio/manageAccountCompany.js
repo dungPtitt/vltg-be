@@ -550,6 +550,8 @@ exports.thongKeDanhSachUngVien = async (req, res, next) => {
     if (id_hinhthuc) condition2["uv_hinh_thuc"] = Number(id_hinhthuc);
     if (id_city) condition2["uv_dia_diem"] = new RegExp(`\\b${id_city}\\b`);
     if (key) condition2["uv_cong_viec"] = new RegExp(key, "i");
+    console.log("body::", req.body);
+    console.log("condition2::", condition2);
     let danhSachUngVien = await Users.aggregate([
       { $match: condition },
       { $sort: { updatedAt: -1 } },
@@ -571,8 +573,11 @@ exports.thongKeDanhSachUngVien = async (req, res, next) => {
           district: "$district",
           city: "$city",
           userName: "$userName",
+          birthday: "$birthday",
           phone: "$phone",
+          email: "$email",
           type: "$type",
+          gender: "$gender",
           phoneTK: "$phoneTK",
           address: "$address",
           avatarUser: "$avatarUser",
@@ -600,7 +605,12 @@ exports.thongKeDanhSachUngVien = async (req, res, next) => {
       let id_uv = danhSachUngVien[i]._id;
 
       let ntd_xem_uv = await NtdXemUv.findOne({ id_ntd: id_ntd, id_uv: id_uv });
-      if (ntd_xem_uv) check_ntd_xem_uv = true;
+      if (ntd_xem_uv) {
+        check_ntd_xem_uv = true;
+      } else {
+        danhSachUngVien[i].email = "";
+        danhSachUngVien[i].phone = "";
+      }
 
       let ntd_save_uv = await NtdSaveUv.findOne({
         id_ntd: id_ntd,
@@ -610,6 +620,21 @@ exports.thongKeDanhSachUngVien = async (req, res, next) => {
 
       let xem_uv = await XemUv.findOne({ xm_id_ntd: id_ntd, xm_id_uv: id_uv });
       if (xem_uv) check_xem_uv = true;
+
+      //check nha tuyen dung xem ung vien
+      // let check_xem_uv = false;
+      // let ntd_xem_uv = await NtdXemUv.findOne({
+      //   id_ntd: id_ntd,
+      //   id_uv: id_uv,
+      // });
+      // if (ntd_xem_uv) {
+      //   check_xem_uv = true;
+      // } else {
+      //   delete ungVien.email;
+      //   delete ungVien.phone;
+      // }
+
+      // ungVien.check_xem_uv = check_xem_uv;
 
       danhSachUngVien[i].check_ntd_xem_uv = check_ntd_xem_uv;
       danhSachUngVien[i].check_xem_uv = check_xem_uv;
