@@ -120,6 +120,14 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    otp: {
+      type: Number,
+      default: null,
+    },
+    time_send_otp: {
+      type: Date,
+      default: null,
+    },
     com_size: {
       // Quy mô công ty
       type: String,

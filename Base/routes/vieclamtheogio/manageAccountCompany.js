@@ -20,6 +20,8 @@ router.post(
   formData.parse(),
   manageAccountCompany.changePassword
 );
+router.post("/setPassword", formData.parse(), manageAccountCompany.setPassword);
+
 //------tin tuyen dung
 router.post(
   "/danhSachTinTuyenDungMoi",

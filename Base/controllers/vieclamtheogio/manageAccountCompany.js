@@ -21,9 +21,8 @@ const folder_img = "user_ntd";
 
 exports.register = async (req, res, next) => {
   try {
-    // console.log("register::", req.body);
-    let { userName, email, password, type } = req.body;
-    if (userName && email && password) {
+    let { userName, email, type } = req.body;
+    if (userName && email) {
       let checkEmail = await Users.findOne({ email: email }).lean();
       let time = functions.convertTimestamp(Date.now());
       if (checkEmail)
@@ -33,34 +32,18 @@ exports.register = async (req, res, next) => {
       if (type == 1) {
         diem_free = 10;
       }
+      let rundom = Math.floor(Math.random() * 1000000);
       const user = new Users({
         _id: maxId,
         userName,
         email,
-        password: md5(password),
         type,
         diem_free,
+        otp: rundom,
         createdAt: time,
       });
-      await user.save();
-      const token = await functions.createToken(
-        {
-          _id: user._id,
-          email: user.email,
-          type: user.type,
-          userName: userName,
-        },
-        "1d"
-      );
-      let refreshToken = await functions.createToken(
-        { userId: user._id },
-        "1y"
-      );
-      let data = {
-        access_token: token,
-        refresh_token: refreshToken,
-      };
-      return functions.success(res, "Register success", { data });
+      await Promise.all([user.save(), functions.sendEmailOTP(email, rundom)]);
+      return functions.success(res, "Register success");
     }
     return functions.setError(res, "Missing fields", 400);
   } catch (error) {
@@ -111,7 +94,7 @@ exports.login = async (req, res, next) => {
 
 exports.changePassword = async (req, res, next) => {
   try {
-    console.log("req:::", req.body);
+    // console.log("req:::", req.body);
     let id = req.user.data._id;
     let { oldpassword, password } = req.body;
     if (oldpassword && password) {
@@ -135,6 +118,26 @@ exports.changePassword = async (req, res, next) => {
   }
 };
 
+exports.setPassword = async (req, res, next) => {
+  try {
+    let id = req?.user?.data?._id;
+    let { password, email } = req.body;
+    if (!id && !email) return functions.setError(res, "Missing fields", 404);
+    if (email) {
+      await Users.findOneAndUpdate(
+        { email: email },
+        { password: md5(password) }
+      );
+      return functions.success(res, "Set password success");
+    }
+    await Users.findOneAndUpdate({ _id: id }, { password: md5(password) });
+    return functions.success(res, "Set password success");
+  } catch (error) {
+    console.log("err:", error);
+    return functions.setError(res, error.message);
+  }
+};
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     let { email } = req.body;
@@ -143,9 +146,6 @@ exports.forgotPassword = async (req, res, next) => {
       if (user) {
         let newPassword = functions.randomNumber;
         console.log("new", newPassword);
-        // await functions.sendEmailForgotPassword(email, newPassword);
-        // let newPass = md5(newPassword);
-        // await Users.findOneAndUpdate({ email: email }, { password: newPass });
         return functions.success(res, "Forgot password success", {
           password: newPassword,
         });
@@ -158,6 +158,26 @@ exports.forgotPassword = async (req, res, next) => {
     return functions.setError(res, error.message);
   }
 };
+
+exports.resetPassword = async (req, res, next) => {
+  try {
+    let { email, newPassword } = req.body;
+    if (email) {
+      let user = await Users.findOne({ email: email });
+      if (user) {
+        user.password = md5(newPassword);
+        await user.save();
+        return functions.success(res, "Forgot password success");
+      }
+      return functions.setError(res, "Email not exists", 401);
+    }
+    return functions.setError(res, "Missing fields", 400);
+  } catch (error) {
+    console.log("err:", error);
+    return functions.setError(res, error.message);
+  }
+};
+
 exports.danhSachTinTuyenDungMoi = async (req, res, next) => {
   try {
     let id_ntd = req.user.data._id;

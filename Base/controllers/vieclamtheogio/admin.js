@@ -226,7 +226,7 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
     pageSize = Number(pageSize);
     const skip = (page - 1) * pageSize;
     // let condition = { _id: { $nin: [null, 0] } };
-    console.log("body", req.body);
+    // console.log("body", req.body);
     let condition = {};
 
     //phan biet danh sach nha tuyen dung <> ung vien
@@ -251,7 +251,7 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
     if (toDate && fromDate)
       condition.createdAt = { $gte: fromDate, $lte: toDate };
     //
-    // if (source) condition["inforVLTG.source"] = Number(source);
+    // if (source) condition["source"] = Number(source);
     if (_id) condition._id = Number(_id);
     let danhSachUngVien = await Users.aggregate([
       { $match: condition },
@@ -281,12 +281,12 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
           type: "$type",
           avatarUser: "$avatarUser",
           createdAt: "$createdAt",
-          day: "$inforVLTG.uv_day",
+          day: "$uv_day",
           cong_viec: "$CVMM.cong_viec",
           dia_diem: "$CVMM.dia_diem",
           nganh_nghe: "$CVMM.nganh_nghe",
-          source: "$inforVLTG.source",
-          active: "$inforVLTG.active",
+          source: "$source",
+          active: "$active",
         },
       },
     ]);
@@ -302,7 +302,7 @@ exports.danhSachUngVienAndNtd = async (req, res, next) => {
     }
     const total = await functions.findCount(Users, condition);
 
-    console.log("danhSachUngVien", danhSachUngVien);
+    // console.log("danhSachUngVien", danhSachUngVien);
     return functions.success(res, "Thong ke danh sach ntd", {
       total,
       data: danhSachUngVien,
@@ -382,6 +382,7 @@ exports.getDetailUngVien = async (req, res, next) => {
         uvCvmm.name_job = name_job;
         uvCvmm.name_city = name_city;
       }
+      uv.uv_congviec = uvCvmm.cong_viec;
       return functions.success(res, "lay ra thong tin thanh cong!", {
         data: uv,
         uvCvmm: uvCvmm,
@@ -466,8 +467,8 @@ exports.createUngVien = async (req, res, next) => {
             avatarUser: nameAvatar,
             createdAt: time_created,
             updatedAt: time_created,
-            "inforVLTG.uv_day": day,
-            "inforVLTG.uv_active": 1,
+            uv_day: day,
+            active: 1,
           });
           user = await user.save();
           if (user) {
@@ -561,7 +562,7 @@ exports.updateUngVien = async (req, res, next) => {
             address: address,
             avatarUser: nameAvatar,
             updatedAt: time_created,
-            "inforVLTG.uv_day": day,
+            uv_day: day,
           },
           { new: true }
         );
@@ -599,7 +600,7 @@ exports.activeUngVien = async (req, res, next) => {
       if (!active) active = 0;
       let ungVien = await Users.findOneAndUpdate(
         { _id: id_uv, type: 0 },
-        { "inforVLTG.uv_active": active }
+        { active: active }
       );
       if (ungVien) {
         return functions.success(res, "active ung vien thanh cong!");
@@ -656,7 +657,7 @@ exports.createCompany = async (req, res, next) => {
             avatarUser: nameAvatar,
             createdAt: time_created,
             updatedAt: time_created,
-            "inforVLTG.ntd_active": 1,
+            active: 1,
           });
           user = await user.save();
           if (user) {
@@ -745,7 +746,7 @@ exports.activeCompany = async (req, res, next) => {
       if (!active) active = 0;
       let ntd = await Users.findOneAndUpdate(
         { _id: id_ntd, type: 1 },
-        { "inforVLTG.ntd_active": active }
+        { active: active }
       );
       if (ntd) {
         return functions.success(res, "active ung vien thanh cong!");
@@ -796,22 +797,11 @@ exports.danhSachTin = async (req, res, next) => {
     let danhSachTin = await ViecLam.aggregate([
       { $match: condition },
       { $sort: { id_vieclam: -1 } },
-      { $skip: skip },
-      { $limit: pageSize },
       {
         $lookup: {
           from: "Users",
           localField: "id_ntd",
           foreignField: "_id",
-          pipeline: [
-            {
-              $match: {
-                _id: { $nin: [0, null] },
-                inforVLTG: { $ne: null },
-                type: 1,
-              },
-            },
-          ],
           as: "NTD",
         },
       },
@@ -855,6 +845,8 @@ exports.danhSachTin = async (req, res, next) => {
           userName: "$NTD.userName",
         },
       },
+      { $skip: skip },
+      { $limit: pageSize },
     ]);
     let total = await ViecLam.aggregate([
       { $match: condition },

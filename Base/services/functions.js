@@ -479,9 +479,9 @@ exports.sendEmailUv = async (ntd, ungVien) => {
                 <tr><td style="padding-bottom: 20px;background: #dad7d7"></td></tr>
                 <tr  style="float: left;padding:10px 15px 0px 15px;min-height: 175px;">
                     <td colspan="2">
-                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;">Xin chào ${ntd.userName}</p>
-                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Cám ơn bạn đã tin tưởng Vieclamtheogio.timviec365.vn là cầu nối giúp bạn tìm kiếm công việc mong muốn.</p>
-                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;"><span><a style="    font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/ung-vien-${ntd._id}.html">Hồ sơ của bạn</a> trên website Vieclamtheogio.vn đã được nhà tuyển dụng <span><a style="font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.timviec365.vn/'.'-co' . ${ntd._id} .'.html">${ntd.userName}</a> xem</span>. Bạn có thể tham khảo các công việc tương tự xem có phù hợp với mình không nhé!</p> 
+                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;">Xin chào ${ungVien.userName}</p>
+                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Cám ơn bạn đã tin tưởng vieclamtheogio.devopszero.id.vn là cầu nối giúp bạn tìm kiếm công việc mong muốn.</p>
+                        <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;"><span><a style="    font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.devopszero.id.vn/ung-vien/${ungVien._id}">Hồ sơ của bạn</a> trên website vieclamtheogio.devopszero.id.vn đã được nhà tuyển dụng <span><a style="font-weight: bold;color: #307df1;text-decoration: none;" href="https://vieclamtheogio.devopszero.id.vn/'.'-co' . ${ntd._id} .'.html">${ntd.userName}</a> xem</span>. Bạn có thể tham khảo các công việc tương tự xem có phù hợp với mình không nhé!</p> 
                         <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 5px;">Trân trọng!</p>
                     </td>
                 </tr> 
@@ -490,17 +490,17 @@ exports.sendEmailUv = async (ntd, ungVien) => {
                 <tr><td style="padding-bottom: 20px;background: #dad7d7"></td></tr>
                 <tr  style="float: left;padding:0px 15px 0px 15px;min-height: 115px;">
                     <td>
-                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;color: #307df1">Công ty Cổ phần Thanh toán Hưng Hà</p>
-                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;color:#4D4D4D"><span style="color: #307df1">VP1: </span>Tầng 4, B50, Lô 6, KĐT Định Công - Hoàng Mai - Hà Nội</p>
-                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;color:#4D4D4D"><span style="color: #307df1">VP2: </span> Thôn Thanh Miếu, Xã Việt Hưng, Huyện Văn Lâm, Tỉnh Hưng Yên</p>
-                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;color:#4D4D4D"><span style="color: #307df1">Hotline:</span> 1900633682 - ấn phím 1</p>
-                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-bottom: 15px;color:#4D4D4D"><span style="color: #307df1">Email hỗ trợ:</span> timviec365.vn@gmail.com</p>
+                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;color: #307df1">Công ty Cổ phần Tìm việc 136</p>
+                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;color:#4D4D4D"><span style="color: #307df1">VP: </span>Số 5, Ngõ 83 Tân Triêu - Thanh Trì - Hà Nội</p>
+                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;color:#4D4D4D"><span style="color: #307df1">Hotline:</span> 0355961899</p>
+                        <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-bottom: 15px;color:#4D4D4D"><span style="color: #307df1">Email hỗ trợ:</span> dung136ptit@gmail.com</p>
                     </td>
                 </tr>
                 <tr><td style="padding-bottom: 39px;background: #dad7d7"></td></tr>
             </table>
             </body>`;
-  let subject = "[Vieclamtheogio.vn] Nhà tuyển dụng vừa xem hồ sơ của bạn";
+  let subject =
+    "[vieclamtheogio.devopszero.id.vn] Nhà tuyển dụng vừa xem hồ sơ của bạn";
   let options = {
     from: process.env.AUTH_EMAIL,
     to: ungVien.email,
@@ -516,35 +516,72 @@ exports.sendEmailUv = async (ntd, ungVien) => {
   });
 };
 
+exports.sendEmailOTP = async (email, otp) => {
+  let body = `<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: arial;padding-top: 20px;padding-bottom: 20px;">
+            <table style="width: 700px;background:#fff; margin:0 auto;border-collapse: collapse;color: #000">
+                <tr  style="float: left;padding:10px 15px 0px 15px;min-height: 175px;">
+                    <td colspan="2">
+                      <p style="font-size: 16px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;">Mã otp xác thực của bạn là: ${otp}</p>
+                    </td>
+                </tr>
+            </table>
+            </body>`;
+  let subject = "[vieclamtheogio.devopszero.id.vn] Mã otp xác thực";
+  let options = {
+    from: process.env.AUTH_EMAIL,
+    to: email,
+    subject: subject,
+    html: body,
+  };
+  transport.sendMail(options, (err, info) => {
+    if (err) {
+      console.log("Erorr when send mail:::", err);
+    } else {
+      console.log("Message sent: " + info.response);
+    }
+  });
+};
+
 exports.sendEmailNtd = async (ntd, ungVien, viecLam) => {
   let uv_name = ungVien.userName;
   let ntd_name = ntd.userName;
   let vi_tri = viecLam.vi_tri;
   let body = `<body style="width: 100%;background-color: #dad7d7;text-align: justify;padding: 0;margin: 0;font-family: unset;padding-top: 20px;padding-bottom: 20px;">
     <table style="width: 600px;background:#fff; margin:0 auto;border-collapse: collapse;color: #000">
-        <tr style="height: 165px;background-image: url(https://timviec365.vn/images/email/bg1.png);background-size:100% 100%;background-repeat: no-repeat;float: left;width: 100%;padding: 0px 30px;box-sizing: border-box;">
+        <tr style="height: 165px;background-image: url();background-size:100% 100%;background-repeat: no-repeat;float: left;width: 100%;padding: 0px 30px;box-sizing: border-box;">
         <td style="padding-top: 23px;float: left;">
-            <img src="https://timviec365.vn/images/email/logo2.png">
-        </td>
-        <td style="text-align: left;float: right;">
+            
             <ul style="margin-top: 15px;padding-left: 0px;">
+                <li style="list-style-type: none;padding-bottom: 5px;height:25px;margin-left: 0px;"><span style="font-size:18px;">Tìm việc 136</span></li>
                 <li style="list-style-type: none;padding-bottom: 5px;height:25px;margin-left: 0px;"><span style="color: #307df1;font-size: 28px;padding-right: 5px;font-weight:bold;">&#8727;</span><span style="font-size:18px;">Đăng tin tuyển dụng miễn phí</span></li>
                 <li style="list-style-type: none;padding-bottom: 5px;height:25px;margin-left: 0px;"><span style="color: #307df1;font-size: 28px;padding-right: 5px;font-weight:bold;">&#8727;</span><span style="font-size:18px;">Không giới hạn tin đăng tuyển dụng</span></li>
                 <li style="list-style-type: none;padding-bottom: 5px;height:25px;margin-left: 0px;"><span style="color: #307df1;font-size: 28px;padding-right: 5px;font-weight:bold;">&#8727;</span><span style="font-size:18px;">Biểu mẫu nhân sự chuyên nghiệp</span></li>
-            </ul>          
+            </ul>
+        </td>
+        <td style="text-align: left;float: right;">
+                      
         </td>
         </tr>
         <tr  style="float: left;padding:10px 30px 30px 30px;min-height: 289px;">
         <td colspan="2">
             <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;padding-top: 15px;">Xin chào ${ntd_name}</p>
-            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Ứng viên <span style="color: #307df1">${uv_name}</span> đã ứng tuyển vào tin đăng <span style="color: #307df1;">${vi_tri}.</span> của quý công ty</p>            
-                <p style="margin: 10px 0px 0px 0px; font-size: 18px;padding-left: 70px;"><span>Họ và tên:  </span><span>${uv_name}</span></p>
-                <p style="margin: 5px 0px 10px 0px; font-size: 18px;padding-left: 70px;"><span>Địa chỉ:  </span><span>${ungVien.address}</span></p>
-
-            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Để xem thông tin chi tiết ứng viên và tải CV ứng viên vui lòng nhấn nút:</p>
-            <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.timviec365.vn/ung-vien-${ungVien._id}.html" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
+            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Ứng viên <span style="color: #307df1">${uv_name}</span> đã ứng tuyển vào tin đăng <span style="color: #307df1;">${vi_tri}</span> của quý công ty</p>            
+            <p style="font-size: 18px;margin: 0;line-height: 25px;margin-bottom: 5px;">Để xem thông tin chi tiết ứng viên:</p>
+            <p style="margin: auto;margin-top: 20px;text-align: center;border-radius: 5px;width: 265px;height: 45px;background:#307df1;border-radius: 5px;"><a href="https://vieclamtheogio.devopszero.id.vn/ung-vien/${ungVien._id}" style="color: #fff;text-decoration: none;font-size: 18px;line-height: 43px;">Xem chi tiết ứng viên</a></p>
         </td>
-        </tr>`;
+        </tr>
+        <tr><td style="padding-bottom: 20px;background: #dad7d7"></td></tr>
+        <tr  style="float: left;padding:0px 15px 0px 15px;min-height: 115px;">
+            <td>
+                <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-top: 15px;color: #307df1">Công ty Cổ phần Tìm việc 136</p>
+                <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;color:#4D4D4D"><span style="color: #307df1">VP: </span>Số 5, Ngõ 83 Tân Triêu - Thanh Trì - Hà Nội</p>
+                <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;color:#4D4D4D"><span style="color: #307df1">Hotline:</span> 0355961899</p>
+                <p style="margin: 0;font-size: 14px;margin: 0;line-height: 19px;margin-bottom: 5px;padding-bottom: 15px;color:#4D4D4D"><span style="color: #307df1">Email hỗ trợ:</span> dung136ptit@gmail.com</p>
+            </td>
+        </tr>
+        <tr><td style="padding-bottom: 39px;background: #dad7d7"></td></tr>
+        `;
+
   let subject = uv_name + " đã ứng tuyển vào vị trí " + vi_tri;
   let options = {
     from: process.env.AUTH_EMAIL,

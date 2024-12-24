@@ -24,6 +24,12 @@ router.post(
 );
 router.post("/tuKhoaLienQuan", formData.parse(), viecLam.tuKhoaLienQuan);
 router.post("/trangChu", formData.parse(), viecLam.trangChu);
+router.post(
+  "/trangChuSauDN",
+  formData.parse(),
+  functions.checkToken,
+  viecLam.trangChu
+);
 router.post("/thongKeViecLam", formData.parse(), viecLam.thongKeViecLam);
 router.post(
   "/thongKeDanhSachViecLam",

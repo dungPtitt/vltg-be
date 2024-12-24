@@ -115,6 +115,17 @@ exports.danhSachViecLam = async (req, res, next) => {
             },
           },
         ]);
+        for (let i = 0; i < viecLamKhac.length; i++) {
+          let time_created = viecLamKhac[i].ntd_createdAt;
+          if (!time_created)
+            time_created = functions.convertTimestamp(Date.now());
+          let linkAvatar = functions.getLinkFile(
+            folder_img,
+            time_created,
+            viecLamKhac[i].ntd_avatar
+          );
+          viecLamKhac[i].linkAvatar = linkAvatar;
+        }
 
         // console.log("viecLamKhac", viecLamKhac);
         //ten nganh nghe
@@ -340,7 +351,27 @@ exports.trangChu = async (req, res, next) => {
     let time = functions.convertTimestamp(Date.now());
     time = time - 86400;
     // let condition = { time_td: { $gt: time }, active: 1 };
+    // let user = req.user && req.user.data ? req.user.data : null;
+    let id_uv = req.user && req.user.data ? req.user.data._id : 0;
+
     let condition = { active: 1 };
+    let condition2 = {
+      $or: [
+        { tra_luong: 1, luong: { $gte: 30000 } },
+        { tra_luong: 2, luong: { $gte: 300000 } },
+        { tra_luong: 3, luong: { $gte: 4000000 } },
+        { tra_luong: 1, luong_first: { $gte: 30000 } },
+        { tra_luong: 2, luong_first: { $gte: 300000 } },
+        { tra_luong: 3, luong_first: { $gte: 4000000 } },
+      ],
+      active: 1,
+    };
+    if (id_uv) {
+      let user = await Users.findOne({ _id: id_uv });
+      // condition = { active: 1, nganh_nghe: new RegExp(`\\b${user.nganh_nghe}\\b`) };
+      condition["dia_diem"] = user.city;
+      condition2["dia_diem"] = user.city;
+    }
     let viecLamMoiNhat = await ViecLam.aggregate([
       { $match: condition },
       { $sort: { created_at: -1 } },
@@ -384,17 +415,6 @@ exports.trangChu = async (req, res, next) => {
     let total1 = await functions.findCount(ViecLam, condition);
     //viec lam luong hap dan
     // muc_luong: {$gte: "3"}
-    let condition2 = {
-      $or: [
-        { tra_luong: 1, luong: { $gte: 30000 } },
-        { tra_luong: 2, luong: { $gte: 300000 } },
-        { tra_luong: 3, luong: { $gte: 4000000 } },
-        { tra_luong: 1, luong_first: { $gte: 30000 } },
-        { tra_luong: 2, luong_first: { $gte: 300000 } },
-        { tra_luong: 3, luong_first: { $gte: 4000000 } },
-      ],
-      active: 1,
-    };
     let viecLamHapDan = await ViecLam.aggregate([
       { $match: condition2 },
       { $sort: { tra_luong: 1, muc_luong: -1 } },
@@ -475,7 +495,6 @@ exports.thongKeViecLam = async (req, res, next) => {
     // let condition = {last_time: {$gt: now}};
     let totalHinhThuc = [];
     let listJob = await ViecLam.find(condition);
-    // console.log("listJob", listJob.length);
     for (let i = 1; i <= 3; i++) {
       let total = listJob.filter((e) => e.hinh_thuc == i).length;
       totalHinhThuc.push(total);
