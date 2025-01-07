@@ -399,7 +399,7 @@ exports.getViecLamDaUngTuyen = async (req, res, next) => {
         },
       },
       { $match: { "UngTuyen.id_uv": userId } },
-      { $sort: { id_ungtuyen: -1 } },
+      { $sort: { "UngTuyen.id_ungtuyen": -1 } },
       { $skip: skip },
       { $limit: pageSize },
       {
@@ -579,9 +579,15 @@ exports.nhanViec = async (req, res, next) => {
               tb_name: uv_name,
               tb_avatar: uv_avatar,
             });
-            await thongBaoNtd.save();
+            await Promise.all([
+              thongBaoNtd.save(),
+              functions.sendEmailNtd(ntd, ungVien, viecLam),
+              functions.sendEmailApplySuccessToUv(ntd, ungVien, viecLam),
+            ]);
+            // await thongBaoNtd.save();
             //gui mail
-            await functions.sendEmailNtd(ntd, ungVien, viecLam);
+            // await functions.sendEmailNtd(ntd, ungVien, viecLam);
+            // await functions.sendEmailApplySuccessToUv(ntd, ungVien, viecLam);
             return functions.success(res, "Ung tuyen viec lam thanh cong!");
           }
           return functions.setError(

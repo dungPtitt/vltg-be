@@ -6,6 +6,15 @@ const functions = require("../../services/functions");
 
 //dang nhap
 router.post("/loginAdmin", formData.parse(), admin.loginAdmin);
+
+router.post(
+  "/trangChu",
+  functions.checkToken,
+  functions.checkAdmin,
+  formData.parse(),
+  admin.trangChu
+);
+
 router.post(
   "/getInfoAdmin",
   functions.checkToken,

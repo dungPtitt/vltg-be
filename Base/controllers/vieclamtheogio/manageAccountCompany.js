@@ -1424,12 +1424,23 @@ exports.updateStatusUngTuyen = async (req, res, next) => {
         { status: status }
       );
       if (ungTuyen && ungTuyen.matchedCount > 0) {
+        let [ntd, viecLam, ungVien] = await Promise.all([
+          Users.findOne({ _id: id_ntd, type: 1 }),
+          ViecLam.findOne({ id_vieclam: id_viec }),
+          Users.findOne({ _id: id_uv, type: 0 }),
+        ]);
+        if (status == 3) {
+          await functions.sendEmailUvChuaPhuHop(ntd, ungVien, viecLam);
+        } else if (status == 2) {
+          await functions.sendEmailUvPhuHop(ntd, ungVien, viecLam);
+        }
         return functions.success(res, "Update status ung tuyen thanh cong");
       }
       return functions.setError(res, "Ung tuyen not found!", 404);
     }
     return functions.setError(res, "Missing input value", 405);
   } catch (error) {
+    console.log("error::", error);
     return functions.setError(res, error.message);
   }
 };

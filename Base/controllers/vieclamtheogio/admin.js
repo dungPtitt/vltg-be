@@ -11,6 +11,7 @@ const functions = require("../../services/functions");
 const md5 = require("md5");
 const folder_img_uv = "user_uv";
 const folder_img_ntd = "user_ntd";
+const { startOfMonth, endOfMonth } = require("date-fns");
 
 exports.loginAdmin = async (req, res, next) => {
   try {
@@ -60,6 +61,62 @@ exports.loginAdmin = async (req, res, next) => {
     }
     return functions.setError(res, "Missing input value!", 405);
   } catch (error) {
+    return functions.setError(res, error.message);
+  }
+};
+
+exports.trangChu = async (req, res, next) => {
+  try {
+    const today = Date.now();
+    const start = functions.convertTimestamp(startOfMonth(today));
+
+    const end = functions.convertTimestamp(endOfMonth(today));
+    let [
+      totalUngVien,
+      totalUngCreateDay,
+      totalNtd,
+      totalNtdCreateDay,
+      totalTin,
+      totalTinDay,
+    ] = await Promise.all([
+      Users.countDocuments({ type: 0 }),
+      Users.countDocuments({
+        type: 0,
+        createdAt: { $gte: start, $lte: end },
+      }),
+      Users.countDocuments({ type: 1 }),
+      Users.countDocuments({
+        type: 1,
+        createdAt: { $gte: start, $lte: end },
+      }),
+      ViecLam.countDocuments({}),
+      ViecLam.countDocuments({
+        created_at: { $gte: start, $lte: end },
+      }),
+    ]);
+    let max = Math.max(totalUngVien, totalNtd, totalTin);
+    return functions.success(res, "Get data success", {
+      max: max,
+      data: [
+        {
+          name: "Ứng viên",
+          daily: totalUngCreateDay,
+          total: totalUngVien,
+        },
+        {
+          name: "Nhà tuyển dụng",
+          daily: totalNtdCreateDay,
+          total: totalNtd,
+        },
+        {
+          name: "Tin tuyển dụng",
+          daily: totalTinDay,
+          total: totalTin,
+        },
+      ],
+    });
+  } catch (error) {
+    console.log("error:::", error);
     return functions.setError(res, error.message);
   }
 };
@@ -381,8 +438,8 @@ exports.getDetailUngVien = async (req, res, next) => {
         }
         uvCvmm.name_job = name_job;
         uvCvmm.name_city = name_city;
+        uv.uv_congviec = uvCvmm.cong_viec;
       }
-      uv.uv_congviec = uvCvmm.cong_viec;
       return functions.success(res, "lay ra thong tin thanh cong!", {
         data: uv,
         uvCvmm: uvCvmm,
@@ -749,9 +806,9 @@ exports.activeCompany = async (req, res, next) => {
         { active: active }
       );
       if (ntd) {
-        return functions.success(res, "active ung vien thanh cong!");
+        return functions.success(res, "active nguoi tuyen dung thanh cong!");
       }
-      return functions.setError(res, "Ung vien not found!", 404);
+      return functions.setError(res, "Nguoi tuyen dung not found!", 404);
     }
     return functions.setError(res, "Missing input id_ntd", 400);
   } catch (error) {
@@ -1279,15 +1336,15 @@ exports.createTagAndCategory = async (req, res, next) => {
 
 exports.updateTagAndCategory = async (req, res, next) => {
   try {
-    let { jc_id, jc_bv, key_tdgy, key_ndgy } = req.body;
-    if (jc_id && jc_bv && key_tdgy && key_ndgy) {
+    let { jc_id, jc_name, jc_description } = req.body;
+    console.log("update", req.body);
+    if (jc_id && jc_name && jc_description) {
       jc_id = Number(jc_id);
       let tag = await JobCategory.findOneAndUpdate(
         { jc_id: jc_id },
         {
-          jc_bv: jc_bv,
-          key_tdgy: key_tdgy,
-          key_ndgy: key_ndgy,
+          jc_name: jc_name,
+          jc_description: jc_description,
         },
         { new: true }
       );
